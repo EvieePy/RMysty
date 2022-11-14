@@ -1,5 +1,6 @@
 [TOKENS]
 bot = ""
+github = ""
 
 [DEBUG]
 console = false
