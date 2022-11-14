@@ -21,10 +21,4 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-import tomllib as __toml
-
-from .bot import Bot
-
-
-with open('./config.toml', 'rb') as fp:
-    config = __toml.load(fp)
+from .bot import Bot, config

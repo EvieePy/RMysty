@@ -23,10 +23,16 @@ DEALINGS IN THE SOFTWARE.
 """
 import datetime
 import pathlib
+import tomllib
 
 import aiohttp
+import asyncpg
 import discord
 from discord.ext import commands
+
+
+with open('./config.toml', 'rb') as fp:
+    config = tomllib.load(fp)
 
 
 class Bot(commands.Bot):
@@ -42,6 +48,7 @@ class Bot(commands.Bot):
         self.started: datetime.datetime = datetime.datetime.now(tz=datetime.timezone.utc)
 
         self.session: aiohttp.ClientSession | None = None
+        self.pool: asyncpg.Pool | None = None
 
     async def setup_hook(self) -> None:
         modules: list[str] = [f'{p.parent}.{p.stem}' for p in pathlib.Path('modules').glob('*.py')]
@@ -50,6 +57,13 @@ class Bot(commands.Bot):
             await self.load_extension(module)
 
         self.session = aiohttp.ClientSession()
+        self.pool = await asyncpg.create_pool(dsn=config['DATABASE']['dsn'])
 
     async def on_ready(self) -> None:
         print(f'Logged in as {self.user}(ID: {self.user.id})')
+
+    async def close(self) -> None:
+        await super().close()
+
+        await self.session.close()
+        await self.pool.close()
