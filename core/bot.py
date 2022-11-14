@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 import datetime
 import pathlib
 
+import aiohttp
 import discord
 from discord.ext import commands
 
@@ -40,11 +41,15 @@ class Bot(commands.Bot):
 
         self.started: datetime.datetime = datetime.datetime.now(tz=datetime.timezone.utc)
 
+        self.session: aiohttp.ClientSession | None = None
+
     async def setup_hook(self) -> None:
         modules: list[str] = [f'{p.parent}.{p.stem}' for p in pathlib.Path('modules').glob('*.py')]
 
         for module in modules:
             await self.load_extension(module)
+
+        self.session = aiohttp.ClientSession()
 
     async def on_ready(self) -> None:
         print(f'Logged in as {self.user}(ID: {self.user.id})')
