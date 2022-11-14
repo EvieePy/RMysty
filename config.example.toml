@@ -1,2 +1,5 @@
 [TOKENS]
 bot = ""
+
+[DEBUG]
+console = false
