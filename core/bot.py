@@ -31,14 +31,14 @@ from discord.ext import commands
 class Bot(commands.Bot):
 
     # noinspection PyDunderSlots, PyUnresolvedReferences
-    def __init__(self):
+    def __init__(self) -> None:
         intents: discord.Intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
 
         super().__init__(command_prefix=['>? ', '>?'], intents=intents)
 
-        self.uptime: datetime.datetime = datetime.datetime.now(tz=datetime.timezone.utc)
+        self.started: datetime.datetime = datetime.datetime.now(tz=datetime.timezone.utc)
 
     async def setup_hook(self) -> None:
         modules: list[str] = [f'{p.parent}.{p.stem}' for p in pathlib.Path('modules').glob('*.py')]
