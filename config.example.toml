@@ -4,3 +4,6 @@ github = ""
 
 [DEBUG]
 console = false
+
+[DATABASE]
+dsn = "postgres://user:password@host:port/database"
