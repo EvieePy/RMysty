@@ -2,8 +2,13 @@
 bot = ""
 github = ""
 
+# 50 = CRITICAL
+# 40 = ERROR
+# 30 = WARNING
+# 20 = INFO
+# 10 = DEBUG
 [DEBUG]
-console = false
+logging = 20
 
 [DATABASE]
 dsn = "postgres://user:password@host:port/database"

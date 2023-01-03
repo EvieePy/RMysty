@@ -21,9 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-import sys
-import traceback
-
 from discord.ext import commands
 
 import core
@@ -36,17 +33,6 @@ class Admin(commands.Cog):
 
     async def cog_check(self, ctx: commands.Context) -> bool:
         return ctx.author.id == 402159684724719617
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
-        if isinstance(error, commands.CommandNotFound):
-            return
-
-        if not core.config['DEBUG']['console']:
-            return
-
-        print(f'Exception in command: {ctx.command}\n', file=sys.stderr)
-        traceback.print_exception(type(error), error, error.__traceback__)
 
     @commands.command()
     async def sync(self, ctx: commands.Context, guild: bool = False) -> None:

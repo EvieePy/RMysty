@@ -22,6 +22,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 import datetime
+import logging
 import pathlib
 import tomllib
 
@@ -30,15 +31,20 @@ import asyncpg
 import discord
 from discord.ext import commands
 
+from .logs import Handler
+
 
 with open('./config.toml', 'rb') as fp:
     config = tomllib.load(fp)
 
 
+logger: logging.Logger = logging.getLogger(__name__)
+
+
 class Bot(commands.Bot):
 
     # noinspection PyDunderSlots, PyUnresolvedReferences
-    def __init__(self) -> None:
+    def __init__(self, pool: asyncpg.Pool, session: aiohttp.ClientSession) -> None:
         intents: discord.Intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
@@ -47,23 +53,25 @@ class Bot(commands.Bot):
 
         self.started: datetime.datetime = datetime.datetime.now(tz=datetime.timezone.utc)
 
-        self.session: aiohttp.ClientSession | None = None
-        self.pool: asyncpg.Pool | None = None
+        self.session: aiohttp.ClientSession = session
+        self.pool: asyncpg.Pool = pool
+
+        handler: Handler = Handler(level=config['DEBUG']['logging'])
+        discord.utils.setup_logging(handler=handler, level=logging.DEBUG)
 
     async def setup_hook(self) -> None:
-        modules: list[str] = [f'{p.parent}.{p.stem}' for p in pathlib.Path('modules').glob('*.py')]
 
+        async with self.pool.acquire() as connection:
+            with open('./sql/schema.sql', 'r') as schema:
+                await connection.execute(schema.read())
+
+        logger.info('Completed initial database setup.')
+
+        modules: list[str] = [f'{p.parent}.{p.stem}' for p in pathlib.Path('modules').glob('*.py')]
         for module in modules:
             await self.load_extension(module)
 
-        self.session = aiohttp.ClientSession()
-        self.pool = await asyncpg.create_pool(dsn=config['DATABASE']['dsn'])
+        logger.info(f'Loaded ({len(modules)}) modules.')
 
     async def on_ready(self) -> None:
-        print(f'Logged in as {self.user}(ID: {self.user.id})')
-
-    async def close(self) -> None:
-        await super().close()
-
-        await self.session.close()
-        await self.pool.close()
+        logger.info(f'Logged in as {self.user}(ID: {self.user.id})')

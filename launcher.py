@@ -23,18 +23,19 @@ DEALINGS IN THE SOFTWARE.
 """
 import asyncio
 
+import aiohttp
+import asyncpg
+
 import core
 
 
-bot: core.Bot = core.Bot()
-
-
 async def run() -> None:
-    async with bot:
-        await bot.start(core.config['TOKENS']['bot'])
+    async with asyncpg.create_pool(core.config['DATABASE']['dsn']) as pool, aiohttp.ClientSession() as session:
+        async with core.Bot(pool=pool, session=session) as bot:
+            await bot.start(core.config['TOKENS']['bot'])
 
 
 try:
     asyncio.run(run())
 except KeyboardInterrupt:
-    asyncio.run(bot.close())
+    core.logger.warning('Shutting down due to Keyboard Interrupt...')
