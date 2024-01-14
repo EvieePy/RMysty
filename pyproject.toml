@@ -1,0 +1,78 @@
+[tool.setuptools]
+packages = []
+
+[project]
+name = "RMysty"
+version = "1.0.0"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "discord.py>=2.4.0",
+    "aiohttp>=3.7.4,<4"
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "pyright",
+    "isort",
+]
+
+[tool.ruff]
+line-length = 120
+exclude = ["venv", "core/logger.py"]
+select = [
+    "C4",
+    "F",
+    "G",
+    "I",
+    "PTH",
+    "RUF",
+    "SIM",
+    "TCH",
+    "UP",
+    "W",
+    "PERF",
+    "ANN",
+]
+ignore = [
+    "F401",
+    "F402",
+    "F403",
+    "F405",
+    "PERF203",
+    "RUF001",
+    "RUF009",
+    "SIM105",
+    "UP034",
+    "UP038",
+    "ANN101",
+    "ANN102",
+    "ANN401",
+    "UP031",
+    "PTH123",
+]
+
+[tool.ruff.isort]
+split-on-trailing-comma = true
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.ruff.flake8-quotes]
+inline-quotes = "double"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pyright]
+exclude = ["venv"]
+useLibraryCodeForTypes = true
+typeCheckingMode = "strict"
+reportImportCycles = false
+reportPrivateUsage = false

@@ -1,0 +1,1 @@
+Simple Discord Bot with some nice QoL features.
