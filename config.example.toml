@@ -1,0 +1,13 @@
+[TOKENS]
+discord = "TOKEN"
+
+[DATABASE]
+dsn = "postgresql:/USER:PASSWORD@localhost:5432/DATABASE"
+
+[OPTIONS]
+prefixes = [">? ", ">?"]
+logging = 20
+
+[WAVELINK]
+uri = "http://localhost:2333"
+password = "youshallnotpass"
