@@ -27,7 +27,7 @@ URL_REGEX: re.Pattern[str] = re.compile(
     r"(?P<URL>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*))",
     re.IGNORECASE,
 )
-CHII_BASE: str = "https://chii.to/api"
+CHII_BASE: str = core.config["CHII"]["url"]
 
 
 class Chii(commands.Cog):

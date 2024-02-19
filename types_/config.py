@@ -33,8 +33,13 @@ class Wavelink(TypedDict):
     password: str
 
 
+class Chii(TypedDict):
+    url: str
+    
+
 class Config(TypedDict):
     TOKENS: Tokens
     DATABASE: Database
     OPTIONS: Options
     WAVELINK: Wavelink
+    CHII: Chii

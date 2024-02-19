@@ -11,3 +11,6 @@ logging = 20
 [WAVELINK]
 uri = "http://localhost:2333"
 password = "youshallnotpass"
+
+[CHII]
+url = "https://chii.to/api"
