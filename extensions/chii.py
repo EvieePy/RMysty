@@ -27,7 +27,8 @@ URL_REGEX: re.Pattern[str] = re.compile(
     r"(?P<URL>[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*))",
     re.IGNORECASE,
 )
-CHII_BASE: str = core.config["CHII"]["url"]
+CHII_API: str = core.config["CHII"]["api"]
+CHII_WEB: str = core.config["CHII"]["web"]
 
 
 class Chii(commands.Cog):
@@ -65,7 +66,7 @@ class Chii(commands.Cog):
             await interaction.followup.send('URL must contain either "http://" or "https://"')
             return
 
-        async with self.session.post(f"{CHII_BASE}/create", json={"url": url}) as resp:
+        async with self.session.post(f"{CHII_API}/create", json={"url": url}) as resp:
             if resp.status == 400:
                 error: dict[str, Any] = await resp.json()
                 await interaction.followup.send(f"Unable to shorten URL: {error['error']}")
@@ -76,7 +77,7 @@ class Chii(commands.Cog):
                 return
 
             data: dict[str, Any] = await resp.json()
-            await interaction.followup.send(f"<{data['url']}>")
+            await interaction.followup.send(f"<{CHII_WEB}/{data['id']}>")
 
 
 async def setup(bot: core.Bot) -> None:

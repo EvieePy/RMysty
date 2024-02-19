@@ -13,4 +13,5 @@ uri = "http://localhost:2333"
 password = "youshallnotpass"
 
 [CHII]
-url = "https://chii.to/api"
+api = "https://chii.to/api"
+web = "https://chii.to"

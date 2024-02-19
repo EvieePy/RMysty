@@ -34,7 +34,8 @@ class Wavelink(TypedDict):
 
 
 class Chii(TypedDict):
-    url: str
+    api: str
+    web: str
     
 
 class Config(TypedDict):
