@@ -7,8 +7,12 @@ version = "1.0.0"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "discord.py>=2.4.0",
-    "aiohttp>=3.7.4,<4"
+    "discord.py>=2.3.0",
+    "aiohttp>=3.7.4,<4",
+    "asyncpg>=0.29.0",
+    "asyncpg-stubs>=0.29.1",
+    "wavelink>=3.1",
+    "jishaku"
 ]
 
 [project.optional-dependencies]
@@ -18,9 +22,7 @@ dev = [
     "isort",
 ]
 
-[tool.ruff]
-line-length = 120
-exclude = ["venv", "core/logger.py"]
+[tool.lint]
 select = [
     "C4",
     "F",
@@ -53,15 +55,19 @@ ignore = [
     "PTH123",
 ]
 
-[tool.ruff.isort]
+[tool.ruff]
+line-length = 120
+exclude = ["venv", "core/logger.py"]
+
+[tool.lint.isort]
 split-on-trailing-comma = true
 combine-as-imports = true
 lines-after-imports = 2
 
-[tool.ruff.flake8-annotations]
+[tool.lint.flake8-annotations]
 allow-star-arg-any = true
 
-[tool.ruff.flake8-quotes]
+[tool.lint.flake8-quotes]
 inline-quotes = "double"
 
 [tool.ruff.format]
