@@ -22,7 +22,7 @@ dev = [
     "isort",
 ]
 
-[tool.lint]
+[tool.ruff.lint]
 select = [
     "C4",
     "F",
@@ -59,15 +59,15 @@ ignore = [
 line-length = 120
 exclude = ["venv", "core/logger.py"]
 
-[tool.lint.isort]
+[tool.ruff.lint.isort]
 split-on-trailing-comma = true
 combine-as-imports = true
 lines-after-imports = 2
 
-[tool.lint.flake8-annotations]
+[tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
 
-[tool.lint.flake8-quotes]
+[tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"
 
 [tool.ruff.format]

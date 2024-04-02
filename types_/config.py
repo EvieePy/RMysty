@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from typing import TypedDict
 
 
@@ -36,7 +37,7 @@ class Wavelink(TypedDict):
 class Chii(TypedDict):
     api: str
     web: str
-    
+
 
 class Config(TypedDict):
     TOKENS: Tokens
