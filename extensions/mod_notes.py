@@ -44,11 +44,58 @@ WHITELISTED_ROLES: list[int] = [
 WHITELISTED_GUILDS: list[int] = [PYTHONISTA_GUILD, DPY_GUILD, TIMEGUILD, DWAREGUILD]
 
 
+def permissions_check(interaction: discord.Interaction[core.Bot]) -> bool:
+    user: discord.Member | discord.User = interaction.user
+
+    if not isinstance(user, discord.Member):
+        return False
+
+    if interaction.guild is None:
+        return False
+
+    if interaction.guild.id not in WHITELISTED_GUILDS:
+        return False
+
+    if not user.resolved_permissions:
+        return False
+
+    if user.resolved_permissions.moderate_members:
+        return True
+
+    return False
+
+
+async def whitelist_check(interaction: discord.Interaction[core.Bot]) -> bool:
+    user: discord.Member | discord.User = interaction.user
+
+    if not isinstance(user, discord.Member):
+        return False
+
+    for guild_id in WHITELISTED_GUILDS:
+        guild: discord.Guild | None = interaction.client.get_guild(guild_id)
+        if guild is None:
+            continue
+
+        member: discord.Member | None = guild.get_member(user.id)
+        if member is None:
+            continue
+
+        if [r for r in member.roles if r.id in WHITELISTED_ROLES]:
+            return True
+
+    # TODO: Add database check for whitelisted users. (Hence async)
+    return False
+
+
+@app_commands.guild_only()
+class ModNoteGroup(app_commands.Group, name="modnotes", description="Moderation notes commands."): ...
+
+
 class ModNotes(commands.Cog):
     def __init__(self, bot: core.Bot) -> None:
         self.bot: core.Bot = bot
 
-        USER_INSTALL: app_commands.AppInstallationType = app_commands.AppInstallationType(user=True)
+        USER_INSTALL: app_commands.AppInstallationType = app_commands.AppInstallationType(user=True, guild=True)
         self._add_note: ContextMenu = ContextMenu(
             name="Add Moderator Note",
             callback=self.add_note,
@@ -68,52 +115,7 @@ class ModNotes(commands.Cog):
         self.bot.tree.remove_command(self._add_note.name, type=self._add_note.type)
         self.bot.tree.remove_command(self._get_notes.name, type=self._get_notes.type)
 
-    def permissions_check(self, interaction: discord.Interaction[core.Bot]) -> bool:
-        user: discord.Member | discord.User = interaction.user
-
-        if not isinstance(user, discord.Member):
-            return False
-
-        if interaction.guild is None:
-            return False
-
-        if interaction.guild.id not in WHITELISTED_GUILDS:
-            return False
-
-        if not user.resolved_permissions:
-            return False
-
-        if user.resolved_permissions.moderate_members:
-            return True
-
-        return False
-
-    async def whitelist_check(self, interaction: discord.Interaction[core.Bot]) -> bool:
-        user: discord.Member | discord.User = interaction.user
-
-        if not isinstance(user, discord.Member):
-            return False
-
-        for guild_id in WHITELISTED_GUILDS:
-            guild: discord.Guild | None = self.bot.get_guild(guild_id)
-            if guild is None:
-                continue
-
-            member: discord.Member | None = guild.get_member(user.id)
-            if member is None:
-                continue
-
-            if [r for r in member.roles if r.id in WHITELISTED_ROLES]:
-                return True
-
-        # TODO: Add database check for whitelisted users. (Hence async)
-        return False
-
-    async def add_note(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
-        if not self.permissions_check(interaction) and not await self.whitelist_check(interaction):
-            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
-            return
-
+    async def __add_note(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
         if not interaction.guild:
             return
 
@@ -146,14 +148,7 @@ class ModNotes(commands.Cog):
         note_id: int = await self.bot.database.add_moderator_notes(data)
         await interaction.followup.send(f"Moderator note **`({note_id})`** added successfully.", ephemeral=True)
 
-    async def get_notes(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
-        """View moderation notes for a user."""
-        await interaction.response.defer(ephemeral=True)
-
-        if not self.permissions_check(interaction) and not await self.whitelist_check(interaction):
-            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
-            return
-
+    async def __get_notes(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
         notes: list[ModeratorNote] = await self.bot.database.fetch_moderator_notes(member.id)
         if not notes:
             await interaction.followup.send("No moderation notes found for this user.", ephemeral=True)
@@ -163,6 +158,54 @@ class ModNotes(commands.Cog):
         await view.setup()
 
         await interaction.followup.send(embed=view.pages[0], view=view, ephemeral=True)
+
+    async def add_note(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
+        """Add a moderation note for a user. This opens a modal."""
+        if not permissions_check(interaction) and not await whitelist_check(interaction):
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+
+        await self.__add_note(interaction, member)
+
+    async def get_notes(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
+        """View moderation notes for a user."""
+        await interaction.response.defer(ephemeral=True)
+
+        if not permissions_check(interaction) and not await whitelist_check(interaction):
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
+            return
+
+        await self.__get_notes(interaction, member)
+
+    group = ModNoteGroup()
+
+    @group.command(name="add")
+    async def add_command(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
+        """Add a moderation note for a user. This opens a modal.
+
+        member: discord.Member
+            The member to add a note for.
+        """
+        if not permissions_check(interaction) and not await whitelist_check(interaction):
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+
+        await self.__add_note(interaction, member)
+
+    @group.command(name="view")
+    async def get_command(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
+        """View moderation notes for a user.
+
+        member: discord.Member
+            The member to view notes for.
+        """
+        await interaction.response.defer(ephemeral=True)
+
+        if not permissions_check(interaction) and not await whitelist_check(interaction):
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
+            return
+
+        await self.__get_notes(interaction, member)
 
 
 async def setup(bot: core.Bot) -> None:
