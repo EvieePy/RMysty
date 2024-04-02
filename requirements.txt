@@ -1,4 +1,4 @@
-    discord.py>=2.3.0
+    discord.py @ git+https://github.com/Rapptz/discord.py@feature/user_apps
     aiohttp>=3.7.4,<4
     asyncpg>=0.29.0
     asyncpg-stubs>=0.29.1
