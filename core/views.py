@@ -23,9 +23,7 @@ from database.models import ModeratorNote
 __all__ = ("NotesView", "NotesModal")
 
 
-COLOURS: dict[int, int] = {
-    0: 6567895,
-}
+COLOURS: dict[int, int] = {0: 6567895, 1: 13417779, 2: 10561070, 3: 6567895, 4: 13417779}
 
 
 class PageModal(ui.Modal, title="Select Page"):
@@ -48,7 +46,7 @@ class NotesView(ui.View):
         super().__init__(timeout=300)
         self.bot: core.Bot = bot
 
-        self.notes: list[ModeratorNote] = notes
+        self.notes: list[ModeratorNote] = sorted(notes, key=lambda n: n.timestamp, reverse=True)
         self.pages: list[discord.Embed] = []
 
         self.position: int = 0
@@ -80,7 +78,6 @@ class NotesView(ui.View):
             )
 
             embed.description = note.note
-            embed.add_field(name="Additional", value=note.additional or "None", inline=False)
 
             embed.add_field(name="User", value=f"{user.mention} `({user.id})`", inline=False)
             embed.add_field(name="Moderator", value=f"{mod.mention} `({mod.id})`", inline=False)

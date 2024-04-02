@@ -21,3 +21,7 @@ __all__ = ("ModeratorEvent",)
 
 class ModeratorEvent(enum.IntEnum):
     note = 0
+    kick = 1
+    ban = 2
+    unban = 3
+    timeout = 4

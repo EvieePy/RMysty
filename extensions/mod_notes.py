@@ -118,15 +118,15 @@ class ModNotes(commands.Cog):
         self.bot.tree.remove_command(self._add_note.name, type=self._add_note.type)
         self.bot.tree.remove_command(self._get_notes.name, type=self._get_notes.type)
 
-    async def __add_note(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
+    async def __add_note(self, interaction: discord.Interaction[core.Bot], member_id: int) -> None:
         if not interaction.guild:
             return
 
-        if interaction.user.id == member.id:
+        if interaction.user.id == member_id:
             await interaction.response.send_message("You cannot add a note to yourself.", ephemeral=True)
             return
 
-        if member.id == interaction.client.user.id:  # type: ignore
+        if member_id == interaction.client.user.id:  # type: ignore
             await interaction.response.send_message("You cannot add a note to me :(", ephemeral=True)
             return
 
@@ -138,7 +138,7 @@ class ModNotes(commands.Cog):
             return
 
         data: ModeratorNoteData = {
-            "user_id": member.id,
+            "user_id": member_id,
             "moderator_id": interaction.user.id,
             "guild_id": interaction.guild.id,
             "event": 0,
@@ -151,8 +151,8 @@ class ModNotes(commands.Cog):
         note_id: int = await self.bot.database.add_moderator_notes(data)
         await interaction.followup.send(f"Moderator note **`({note_id})`** added successfully.", ephemeral=True)
 
-    async def __get_notes(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
-        notes: list[ModeratorNote] = await self.bot.database.fetch_moderator_notes(member.id)
+    async def __get_notes(self, interaction: discord.Interaction[core.Bot], member_id: int) -> None:
+        notes: list[ModeratorNote] = await self.bot.database.fetch_moderator_notes(member_id)
         if not notes:
             await interaction.followup.send("No moderation notes found for this user.", ephemeral=True)
             return
@@ -168,7 +168,7 @@ class ModNotes(commands.Cog):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
 
-        await self.__add_note(interaction, member)
+        await self.__add_note(interaction, member.id)
 
     async def get_notes(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
         """View moderation notes for a user."""
@@ -178,29 +178,48 @@ class ModNotes(commands.Cog):
             await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
             return
 
-        await self.__get_notes(interaction, member)
+        await self.__get_notes(interaction, member.id)
 
     group = ModNoteGroup()
 
     @group.command(name="add")
-    async def add_command(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
+    async def add_command(self, interaction: discord.Interaction[core.Bot], user: str) -> None:
         """Add a moderation note for a user. This opens a modal.
 
-        member: discord.Member
-            The member to add a note for.
+        user: str
+            The user name, nickname or user ID to add a note for.
         """
         if not permissions_check(interaction) and not await whitelist_check(interaction):
             await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
 
-        await self.__add_note(interaction, member)
+        target: discord.Member | discord.User | None = None
+        guild: discord.Guild | None = interaction.guild
+
+        if guild is None:
+            return
+
+        target = guild.get_member_named(user)
+        if not target:
+            try:
+                target = await interaction.client.fetch_user(int(user))
+            except (ValueError, discord.NotFound):
+                await interaction.response.send_message(f"User `{user}` not found. Try entering an ID.", ephemeral=True)
+                return
+            except discord.HTTPException:
+                await interaction.response.send_message(
+                    f"An error occurred while fetching user `{user}`.", ephemeral=True
+                )
+                return
+
+        await self.__add_note(interaction, target.id)
 
     @group.command(name="view")
-    async def get_command(self, interaction: discord.Interaction[core.Bot], member: discord.Member) -> None:
+    async def get_command(self, interaction: discord.Interaction[core.Bot], user: str) -> None:
         """View moderation notes for a user.
 
-        member: discord.Member
-            The member to view notes for.
+        user: str
+            The user name, nickname or user ID to view notes for.
         """
         await interaction.response.defer(ephemeral=True)
 
@@ -208,7 +227,51 @@ class ModNotes(commands.Cog):
             await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
             return
 
-        await self.__get_notes(interaction, member)
+        target: discord.Member | discord.User | None = None
+        guild: discord.Guild | None = interaction.guild
+
+        if guild is None:
+            return
+
+        target = guild.get_member_named(user)
+        if not target:
+            try:
+                target = await interaction.client.fetch_user(int(user))
+            except (ValueError, discord.NotFound):
+                await interaction.followup.send(f"User `{user}` not found. Try entering an ID.", ephemeral=True)
+                return
+            except discord.HTTPException:
+                await interaction.followup.send(f"An error occurred while fetching user `{user}`.", ephemeral=True)
+                return
+
+        await self.__get_notes(interaction, target.id)
+
+    @commands.Cog.listener()
+    async def on_audit_log_entry_create(self, entry: discord.AuditLogEntry) -> None:
+        listened: dict[discord.AuditLogAction, int] = {
+            discord.AuditLogAction.kick: 1,
+            discord.AuditLogAction.ban: 2,
+            discord.AuditLogAction.unban: 3,
+        }
+
+        if entry.action not in listened:
+            return
+
+        if not entry.guild or entry.guild.id not in WHITELISTED_GUILDS:
+            return
+
+        data: ModeratorNoteData = {
+            "user_id": entry.target.id,  # type: ignore
+            "moderator_id": entry.user_id,  # type: ignore
+            "guild_id": entry.guild.id,
+            "event": listened[entry.action],
+            "additional": None,
+            "note": str(entry.reason),
+            "channel_id": None,
+            "message_id": None,
+        }
+
+        await self.bot.database.add_moderator_notes(data)
 
 
 async def setup(bot: core.Bot) -> None:
