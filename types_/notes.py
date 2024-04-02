@@ -13,8 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from . import constants as constants
-from .bot import Bot as Bot
-from .config import config as config
-from .enums import *
-from .views import *
+from typing import TypedDict
+
+
+class ModeratorNoteData(TypedDict):
+    user_id: int
+    guild_id: int
+    channel_id: int | None
+    message_id: int | None
+    moderator_id: int
+    event: int
+    note: str
+    additional: str | None

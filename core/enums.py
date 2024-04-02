@@ -13,8 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from . import constants as constants
-from .bot import Bot as Bot
-from .config import config as config
-from .enums import *
-from .views import *
+import enum
+
+
+__all__ = ("ModeratorEvent",)
+
+
+class ModeratorEvent(enum.IntEnum):
+    note = 0

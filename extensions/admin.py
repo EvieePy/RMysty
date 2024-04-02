@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from typing import Literal, Optional
+
+from typing import Literal
 
 import discord
 from discord.ext import commands
@@ -28,7 +29,7 @@ class Admin(commands.Cog):
         self,
         ctx: commands.Context[core.Bot],
         guilds: commands.Greedy[discord.Object],
-        spec: Optional[Literal["~", "*", "^"]] = None,
+        spec: Literal["~", "*", "^"] | None = None,
     ) -> None:
         if not guilds:
             if spec == "~":
