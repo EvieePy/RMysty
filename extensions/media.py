@@ -17,10 +17,13 @@ import re
 
 import discord
 import wavelink
-from discord.app_commands import ContextMenu
+from discord.app_commands import AppInstallationType, ContextMenu
 from discord.ext import commands
 
 import core
+
+
+USER_INSTALL: AppInstallationType = AppInstallationType(user=True, guild=True)
 
 
 SPOTIFY_URL_REGEX: re.Pattern[str] = re.compile(
@@ -35,7 +38,11 @@ SPOTIFY_URL_REGEX: re.Pattern[str] = re.compile(
 class MediaConverter(commands.Cog):
     def __init__(self, bot: core.Bot) -> None:
         self.bot = bot
-        self.ctxmenu: ContextMenu = ContextMenu(name="Spotify to Youtube", callback=self.convert_spotify)
+        self.ctxmenu: ContextMenu = ContextMenu(
+            name="Spotify to Youtube",
+            callback=self.convert_spotify,
+            allowed_installs=USER_INSTALL,
+        )
 
     async def cog_load(self) -> None:
         self.bot.tree.add_command(self.ctxmenu)

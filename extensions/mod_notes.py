@@ -28,6 +28,8 @@ if TYPE_CHECKING:
     from types_.notes import ModeratorNoteData
 
 
+USER_INSTALL: app_commands.AppInstallationType = app_commands.AppInstallationType(user=True, guild=True)
+
 PYTHONISTA_GUILD: int = 490948346773635102
 DPY_GUILD: int = 336642139381301249
 TIMEGUILD: int = 859565527343955998
@@ -88,14 +90,15 @@ async def whitelist_check(interaction: discord.Interaction[core.Bot]) -> bool:
 
 
 @app_commands.guild_only()
-class ModNoteGroup(app_commands.Group, name="modnotes", description="Moderation notes commands."): ...
+class ModNoteGroup(app_commands.Group, name="modnotes", description="Moderation notes commands."):
+    def __init__(self) -> None:
+        super().__init__(allowed_installs=USER_INSTALL)
 
 
 class ModNotes(commands.Cog):
     def __init__(self, bot: core.Bot) -> None:
         self.bot: core.Bot = bot
 
-        USER_INSTALL: app_commands.AppInstallationType = app_commands.AppInstallationType(user=True, guild=True)
         self._add_note: ContextMenu = ContextMenu(
             name="Add Moderator Note",
             callback=self.add_note,
