@@ -58,46 +58,6 @@ class Admin(commands.Cog):
 
         await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
-    @commands.hybrid_command()
-    async def cleangif(self, ctx: commands.Context[core.Bot], *, member_: str) -> None:
-        """Clear messages with GIF attachments from the provided member."""
-
-        if not ctx.guild:
-            return
-
-        if not ctx.channel.permissions_for(ctx.author).manage_messages:  # type: ignore
-            return
-
-        await ctx.defer()
-
-        try:
-            member: discord.Member = await commands.MemberConverter().convert(ctx, member_)
-        except commands.MemberNotFound:
-            await ctx.send("Could not find that member!")
-            return
-
-        count: int = 0
-        async for message in ctx.channel.history(limit=20):
-            if count >= 5:
-                break
-
-            if message.author == member and message.embeds:
-                for embed in message.embeds:
-                    if embed.type in ("gifv", "image"):
-                        try:
-                            await message.delete()
-                        except discord.HTTPException:
-                            pass
-                        else:
-                            count += 1
-
-                        break
-
-        if count:
-            await ctx.send(f"Deleted {count} messages with GIFs from: {member.mention}", silent=True)
-        else:
-            await ctx.send("No messages were deleted.")
-
 
 async def setup(bot: core.Bot) -> None:
     await bot.add_cog(Admin(bot))
