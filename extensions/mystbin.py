@@ -60,6 +60,7 @@ class MystBin(commands.Cog):
     # @app_commands.allowed_installs(guilds=True, users=True)
     # async def mystbin(self, context: commands.Context[core.Bot], *, content: str) -> None: ...
 
+    @app_commands.checks.cooldown(2, 10.0)
     async def convert_mystbin(self, interaction: discord.Interaction[core.Bot], message: discord.Message) -> None:
         assert self.session
 
