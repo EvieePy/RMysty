@@ -61,10 +61,7 @@ def permissions_check(interaction: discord.Interaction[core.Bot]) -> bool:
     if not user.resolved_permissions:
         return False
 
-    if user.resolved_permissions.moderate_members:
-        return True
-
-    return False
+    return user.resolved_permissions.moderate_members
 
 
 async def whitelist_check(interaction: discord.Interaction[core.Bot]) -> bool:
