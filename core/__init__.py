@@ -17,4 +17,5 @@ from . import constants as constants
 from .bot import Bot as Bot
 from .config import config as config
 from .enums import *
+from .utils import CodeBlocks as CodeBlocks
 from .views import *
