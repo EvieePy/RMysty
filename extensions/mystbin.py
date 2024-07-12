@@ -44,6 +44,7 @@ class MystBin(commands.Cog):
         self.session: aiohttp.ClientSession | None = None
 
     async def cog_load(self) -> None:
+        self.ctxmenu.on_error = self.mystbin_error
         self.bot.tree.add_command(self.ctxmenu)
         self.session = aiohttp.ClientSession()
 
@@ -68,13 +69,20 @@ class MystBin(commands.Cog):
 
         parsed: core.CodeBlocks = core.CodeBlocks.convert(message.content)
         files: list[BinFile] = []
+        content: str
+
+        for attachment in message.attachments:
+            content_type: str = attachment.content_type or ""
+            if content_type.startswith("text/") or content_type == "application/json":
+                content = (await attachment.read()).decode("UTF-8")
+                files.append({"filename": attachment.filename, "content": content[:300_000]})
 
         for index, block in enumerate(parsed.blocks, 1):
             name = f"block_{index}.{block['language'] or 'txt'}"
             files.append({"filename": name, "content": block["content"]})
 
         if len(files) < 5:
-            content: str = (
+            content = (
                 f"{message.author}({message.author.id}) in {message.channel}({message.channel.id})\n"
                 f"{message.created_at}\n\n{message.content}"
             )
@@ -87,6 +95,15 @@ class MystBin(commands.Cog):
 
             data: dict[str, Any] = await resp.json()
             await interaction.followup.send(f"{MYSTBIN_URL}{data['id']}")
+
+    async def mystbin_error(
+        self, interaction: discord.Interaction[core.Bot], error: app_commands.AppCommandError
+    ) -> None:
+        send = interaction.response.send_message
+        if interaction.response.is_done():
+            send = interaction.followup.send
+
+        await send(f"An error occurred: {error}", ephemeral=True)
 
 
 async def setup(bot: core.Bot) -> None:
