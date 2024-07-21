@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import datetime
 from typing import TYPE_CHECKING, Any
 
 import aiohttp
@@ -32,6 +33,12 @@ MYSTBIN_API: str = "https://mystb.in/api/paste"
 MYSTBIN_URL: str = "https://mystb.in/"
 
 
+class Node:
+    def __init__(self, *, url: str, last_edit: datetime.datetime | None) -> None:
+        self.url: str = url
+        self.last_edit: datetime.datetime | None = last_edit
+
+
 class MystBin(commands.Cog):
     def __init__(self, bot: core.Bot) -> None:
         self.bot: core.Bot = bot
@@ -42,6 +49,7 @@ class MystBin(commands.Cog):
         )
 
         self.session: aiohttp.ClientSession | None = None
+        self.cache: core.LRUCache[int, Node] = core.LRUCache(50)
 
     async def cog_load(self) -> None:
         self.ctxmenu.on_error = self.mystbin_error
@@ -66,6 +74,12 @@ class MystBin(commands.Cog):
         assert self.session
 
         await interaction.response.defer()
+
+        # First check our cache...
+        cached: Node | None = self.cache.get(message.id, None)
+        if cached and cached.last_edit == message.edited_at:
+            await interaction.followup.send(cached.url)
+            return
 
         parsed: core.CodeBlocks = core.CodeBlocks.convert(message.content)
         files: list[BinFile] = []
@@ -94,7 +108,12 @@ class MystBin(commands.Cog):
                 return
 
             data: dict[str, Any] = await resp.json()
-            await interaction.followup.send(f"{MYSTBIN_URL}{data['id']}")
+            url: str = f"{MYSTBIN_URL}{data['id']}"
+
+            node: Node = Node(url=url, last_edit=message.edited_at)
+            self.cache[message.id] = node
+
+            await interaction.followup.send(url)
 
     async def mystbin_error(
         self, interaction: discord.Interaction[core.Bot], error: app_commands.AppCommandError
