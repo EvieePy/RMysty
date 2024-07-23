@@ -14,7 +14,7 @@ limitations under the License.
 """
 
 import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import aiohttp
 import discord
@@ -22,10 +22,11 @@ from discord import app_commands
 from discord.ext import commands
 
 import core
+from types_.mystbin import PasteFetch
 
 
 if TYPE_CHECKING:
-    from types_.mystbin import BinFile
+    from types_.mystbin import MBFileCreate, PasteCreateResp
 
 
 ALLOWED_INSTALL: app_commands.AppInstallationType = app_commands.AppInstallationType(user=True, guild=True)
@@ -34,8 +35,8 @@ MYSTBIN_URL: str = "https://mystb.in/"
 
 
 class Node:
-    def __init__(self, *, url: str, last_edit: datetime.datetime | None) -> None:
-        self.url: str = url
+    def __init__(self, *, identifier: str, last_edit: datetime.datetime | None) -> None:
+        self.identifier: str = identifier
         self.last_edit: datetime.datetime | None = last_edit
 
 
@@ -69,20 +70,36 @@ class MystBin(commands.Cog):
     # @app_commands.allowed_installs(guilds=True, users=True)
     # async def mystbin(self, context: commands.Context[core.Bot], *, content: str) -> None: ...
 
+    async def _fetch_paste(self, identifier: str) -> PasteFetch:
+        assert self.session
+
+        async with self.session.get(f"{MYSTBIN_API}/{identifier}") as resp:
+            resp.raise_for_status()
+
+            data: PasteFetch = await resp.json()
+            return data
+
     @app_commands.checks.cooldown(2, 10.0)
     async def convert_mystbin(self, interaction: discord.Interaction[core.Bot], message: discord.Message) -> None:
         assert self.session
-
         await interaction.response.defer()
 
         # First check our cache...
+        # This doesn't technically save a request, but it *does* save a POST request in most cases...
         cached: Node | None = self.cache.get(message.id, None)
         if cached and cached.last_edit == message.edited_at:
-            await interaction.followup.send(cached.url)
-            return
+            try:
+                paste: PasteFetch = await self._fetch_paste(cached.identifier)
+            except aiohttp.ClientResponseError as e:
+                if e.status != 404:
+                    await interaction.followup.send(f"An unknown error occurred fetching this paste: `{e.status}`")
+                    return
+            else:
+                await interaction.followup.send(f"{MYSTBIN_URL}{paste['id']}")
+                return
 
         parsed: core.CodeBlocks = core.CodeBlocks.convert(message.content)
-        files: list[BinFile] = []
+        files: list[MBFileCreate] = []
         content: str
 
         for attachment in message.attachments:
@@ -107,10 +124,11 @@ class MystBin(commands.Cog):
                 await interaction.followup.send(f"An error occurred creating this paste: `{resp.status}`")
                 return
 
-            data: dict[str, Any] = await resp.json()
-            url: str = f"{MYSTBIN_URL}{data['id']}"
+            data: PasteCreateResp = await resp.json()
+            identifier: str = data["id"]
+            url: str = f"{MYSTBIN_URL}{identifier}"
 
-            node: Node = Node(url=url, last_edit=message.edited_at)
+            node: Node = Node(identifier=identifier, last_edit=message.edited_at)
             self.cache[message.id] = node
 
             await interaction.followup.send(url)

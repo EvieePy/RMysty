@@ -13,9 +13,40 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 
-class BinFile(TypedDict):
-    filename: str | None
+class MBFileCreate(TypedDict):
+    filename: NotRequired[str]
     content: str
+
+
+class MBFileFetch(TypedDict):
+    annotation: str
+    charcount: int
+    content: str
+    filename: str
+    loc: int
+    parent_id: str
+
+
+class PasteFetch(TypedDict):
+    created_at: str
+    expires: str | None
+    files: list[MBFileFetch]
+    has_password: bool
+    id: str
+    views: int
+
+
+class PasteCreate(TypedDict):
+    expires: NotRequired[str]
+    files: list[MBFileCreate]
+    password: NotRequired[str]
+
+
+class PasteCreateResp(TypedDict):
+    created_at: str
+    expires: str | None
+    id: str
+    safety: str
