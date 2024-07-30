@@ -39,9 +39,14 @@ class Chii(TypedDict):
     web: str
 
 
+class Pythonista(TypedDict):
+    logs: str
+
+
 class Config(TypedDict):
     TOKENS: Tokens
     DATABASE: Database
     OPTIONS: Options
     WAVELINK: Wavelink
     CHII: Chii
+    PYTHONISTA: Pythonista
