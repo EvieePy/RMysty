@@ -106,7 +106,9 @@ class MystBin(commands.Cog):
             content_type: str = attachment.content_type or ""
             if content_type.startswith("text/") or content_type == "application/json":
                 content = (await attachment.read()).decode("UTF-8")
-                files.append({"filename": attachment.filename, "content": content[:300_000]})
+                filename: str = attachment.filename.removesuffix(".txt")
+
+                files.append({"filename": filename, "content": content[:300_000]})
 
         for index, block in enumerate(parsed.blocks, 1):
             name = f"block_{index}.{block['language'] or 'txt'}"
