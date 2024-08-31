@@ -6,3 +6,4 @@ wavelink>=3.4
 jishaku
 Pillow
 types-Pillow
+numpy
