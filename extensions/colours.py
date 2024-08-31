@@ -27,6 +27,7 @@ class Colours(commands.Cog):
     @app_commands.command(name="colour")
     @app_commands.checks.cooldown(2, 10.0)
     @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def colour_command(self, interaction: discord.Interaction[core.Bot], *, value: str) -> None:
         """Display information and visuals about a colour.
 

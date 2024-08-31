@@ -30,6 +30,11 @@ if TYPE_CHECKING:
 
 
 ALLOWED_INSTALL: app_commands.AppInstallationType = app_commands.AppInstallationType(user=True, guild=True)
+ALLOWED_CONTEXT: app_commands.AppCommandContext = app_commands.AppCommandContext(
+    guild=True,
+    dm_channel=True,
+    private_channel=True,
+)
 MYSTBIN_API: str = "https://mystb.in/api/paste"
 MYSTBIN_URL: str = "https://mystb.in/"
 
@@ -47,6 +52,7 @@ class MystBin(commands.Cog):
             name="Message to MystBin",
             callback=self.convert_mystbin,
             allowed_installs=ALLOWED_INSTALL,
+            allowed_contexts=ALLOWED_CONTEXT,
         )
 
         self.session: aiohttp.ClientSession | None = None
