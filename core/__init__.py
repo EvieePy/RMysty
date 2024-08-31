@@ -18,5 +18,6 @@ from .bot import Bot as Bot
 from .config import config as config
 from .enums import *
 from .lru import LRUCache as LRUCache
-from .utils import CodeBlocks as CodeBlocks
+from .translator import Translator as Translator
+from .utils import CodeBlocks as CodeBlocks, Colour as Colour
 from .views import *

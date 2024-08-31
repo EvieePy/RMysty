@@ -16,12 +16,18 @@ limitations under the License.
 from typing import TypedDict
 
 
-class ModeratorNoteData(TypedDict):
-    user_id: int
-    guild_id: int
-    channel_id: int | None
-    message_id: int | None
-    moderator_id: int
-    event: int
-    note: str
-    additional: str | None
+class Colours(TypedDict):
+    code: int
+    hex: str
+    hex_clean: str
+    html: str
+    rgb: tuple[int, int, int]
+    hls: tuple[float, float, float]
+    rgb_coords: tuple[float, ...]
+    hls_coords: tuple[float, ...]
+
+
+type COORDS_FT = tuple[float, float, float, float]
+type COORDS_TT = tuple[float, float]
+type COORD_T = tuple[float, ...]
+type RGB_T = tuple[int, int, int]

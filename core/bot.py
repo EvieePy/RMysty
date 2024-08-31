@@ -23,6 +23,7 @@ import wavelink
 from discord.ext import commands
 
 from .config import config
+from .translator import Translator
 
 
 if TYPE_CHECKING:
@@ -33,6 +34,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Bot(commands.Bot):
+    colours: dict[str, str]
+
     def __init__(self, *, database: Database) -> None:
         self.database = database
 
@@ -43,6 +46,9 @@ class Bot(commands.Bot):
         super().__init__(intents=intents, command_prefix=config["OPTIONS"]["prefixes"])
 
     async def setup_hook(self) -> None:
+        translator: Translator = Translator()
+        await self.tree.set_translator(translator)
+
         await self.load_extension("jishaku")
         await self.load_extension("extensions")
 
@@ -51,6 +57,8 @@ class Bot(commands.Bot):
 
         node: wavelink.Node = wavelink.Node(uri=uri, password=password)
         await wavelink.Pool.connect(nodes=[node], cache_capacity=1000, client=self)
+
+        self.colours = {c["hex"]: c["name"] for c in await self.database.fetch_colours()}
 
     async def on_ready(self) -> None:
         logger.info("Logged in as %s | %d", self.user, self.user.id)  # type: ignore

@@ -16,10 +16,10 @@ limitations under the License.
 from __future__ import annotations
 
 import asyncio
-import datetime
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+import aiohttp
 import asyncpg
 
 import core
@@ -28,8 +28,6 @@ from .models import *
 
 
 if TYPE_CHECKING:
-    from ..types_.notes import ModeratorNoteData
-
     _Pool = asyncpg.Pool[asyncpg.Record]
 else:
     _Pool = asyncpg.Pool
@@ -64,40 +62,37 @@ class Database:
 
         self.pool = pool
 
-        with open("SCHEMA.sql") as fp:
-            await self.pool.execute(fp.read())
+        try:
+            with open("SCHEMA.sql") as fp:
+                await self.pool.execute(fp.read())
+        except (OSError, AttributeError, asyncpg.PostgresSyntaxError):
+            pass
 
+        await self._refresh_colours()
         logger.info("Successfully initialised the Database.")
 
-    async def fetch_moderator_notes(self, uid: int, /) -> list[ModeratorNote]:
-        query: str = "SELECT * FROM notes WHERE uid = $1"
+    async def _refresh_colours(self) -> None:
+        logger.info("Refreshing colour database")
+
+        URL: str = "https://unpkg.com/color-name-list@10.25.1/dist/colornames.json"
+
+        async with aiohttp.ClientSession() as session, session.get(URL) as resp:
+            try:
+                data: list[dict[str, str]] = await resp.json()
+            except Exception:
+                logger.warning("Unable to refresh colour names in database...")
+                return
+
+        query: str = """INSERT INTO colours VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *"""
+        async with self.pool.acquire() as connection:
+            await connection.executemany(query, [(r["name"], r["hex"]) for r in data])
+
+        logger.info("Successfully refreshed colour database")
+
+    async def fetch_colours(self) -> list[ColourRecord]:
+        query: str = """SELECT * FROM colours"""
 
         async with self.pool.acquire() as connection:
-            record: list[asyncpg.Record] = await connection.fetch(query, uid)
+            rows: list[ColourRecord] = await connection.fetch(query, record_class=ColourRecord)
 
-        notes: list[ModeratorNote] = [ModeratorNote(data) for data in record]
-        return notes
-
-    async def add_moderator_notes(self, data: ModeratorNoteData, /) -> int:
-        query: str = """
-        INSERT INTO notes (uid, gid, cid, mid, moderator, event, note, additional, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING id
-        """
-
-        async with self.pool.acquire() as connection:
-            row: asyncpg.Record | None = await connection.fetchrow(
-                query,
-                data["user_id"],
-                data["guild_id"],
-                data["channel_id"],
-                data["message_id"],
-                data["moderator_id"],
-                data["event"],
-                data["note"],
-                data["additional"],
-                datetime.datetime.now(),
-            )
-
-        assert row
-        return row["id"]
+        return rows
