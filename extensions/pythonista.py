@@ -37,7 +37,7 @@ BYPASS_ROLES: tuple[int, ...] = (
 )
 
 CHANNEL_SPREAD: int = 3
-CHANNEL_SPREAD_RATE: float = 3.5
+CHANNEL_SPREAD_RATE: float = 4
 
 
 class Pythonista(commands.Cog):
