@@ -16,6 +16,7 @@ limitations under the License.
 from __future__ import annotations
 
 import asyncio
+import datetime
 import logging
 from collections import defaultdict
 from typing import cast
@@ -37,7 +38,7 @@ BYPASS_ROLES: tuple[int, ...] = (
 )
 
 CHANNEL_SPREAD: int = 3
-CHANNEL_SPREAD_RATE: float = 4
+CHANNEL_SPREAD_RATE: float = 5
 
 
 class Pythonista(commands.Cog):
@@ -47,14 +48,24 @@ class Pythonista(commands.Cog):
         self._channel_spread: dict[int, set[int]] = defaultdict(set)
         self._tasks: set[asyncio.Task[None]] = set()
 
-    async def _spread_waiter(self, member: discord.Member) -> None:
-        await asyncio.sleep(CHANNEL_SPREAD_RATE)
+    def _check_current_member(self, member: discord.Member) -> bool:
+        guild: discord.Guild | None = self.bot.get_guild(PYTHONISTA)
+        if not guild:
+            return False
+
+        return member in guild.members
+
+    async def _spread_waiter(self, member: discord.Member, *, rate: float = CHANNEL_SPREAD_RATE) -> None:
+        await asyncio.sleep(rate)
 
         spread = self._channel_spread[member.id]
         if len(spread) >= CHANNEL_SPREAD:
             try:
                 await member.ban(delete_message_days=1, reason="AutoBan: Spamming messages across channels.")
             except discord.HTTPException as e:
+                if not self._check_current_member(member):
+                    return
+
                 webhook: discord.Webhook = discord.Webhook.from_url(core.config["PYTHONISTA"]["logs"], client=self.bot)
                 await webhook.send(
                     f"Unable to ban user for Channel Spread Spam: `{member} (ID: {member.id})` > `{e}`",
@@ -85,9 +96,16 @@ class Pythonista(commands.Cog):
         if author.guild_permissions.kick_members:
             return
 
+        joined: datetime.datetime | None = author.joined_at
+        now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+        delta: datetime.timedelta = datetime.timedelta(days=1)
+
+        # Increase the time we wait for spread on new joins...
+        rate: float = 15.5 if joined and joined + delta >= now else CHANNEL_SPREAD_RATE
+
         spread = self._channel_spread[author.id]
         if not spread:
-            task: asyncio.Task[None] = asyncio.create_task(self._spread_waiter(author))
+            task: asyncio.Task[None] = asyncio.create_task(self._spread_waiter(author, rate=rate))
             task.add_done_callback(lambda t: self._tasks.remove(t))
             self._tasks.add(task)
 
