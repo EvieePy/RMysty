@@ -96,3 +96,18 @@ class Database:
             rows: list[ColourRecord] = await connection.fetch(query, record_class=ColourRecord)
 
         return rows
+
+    async def fetch_colour_name_fuzzy(self, name: str, /, *, threshold: float = 70.0) -> list[ColourRecord]:
+        distance: int = int((threshold * len(name)) // 100.0)
+
+        query: str = """
+        SELECT * FROM colours
+        WHERE levenshtein(name, $1::TEXT) <= $2::INTEGER
+        ORDER BY levenshtein(name, $1::TEXT)
+        LIMIT 20
+        """
+
+        async with self.pool.acquire() as connection:
+            rows: list[ColourRecord] = await connection.fetch(query, name, distance, record_class=ColourRecord)
+
+        return rows
