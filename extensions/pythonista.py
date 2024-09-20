@@ -22,6 +22,7 @@ from collections import defaultdict
 from typing import cast
 
 import discord
+from discord import app_commands
 from discord.ext import commands
 
 import core
@@ -36,6 +37,8 @@ BYPASS_ROLES: tuple[int, ...] = (
     1064477988013477939,
     986107886470049892,
 )
+
+TIO_TESTER: int = 1286823927540219916
 
 CHANNEL_SPREAD: int = 3
 CHANNEL_SPREAD_RATE: float = 5
@@ -110,6 +113,36 @@ class Pythonista(commands.Cog):
             self._tasks.add(task)
 
         spread.add(message.channel.id)
+
+    @app_commands.command()
+    @app_commands.guilds(discord.Object(PYTHONISTA))
+    @app_commands.checks.cooldown(2, 60.0)
+    async def tester(self, interaction: discord.Interaction[core.Bot]) -> None:
+        """Add or remove yourself from the TwitchIO Tester role."""
+        assert interaction.guild
+
+        member: discord.Member = cast(discord.Member, interaction.user)
+
+        role: discord.Role | None = member.get_role(TIO_TESTER)
+        if role:
+            try:
+                await member.remove_roles(role)
+            except Exception:
+                await interaction.response.send_message("An unknown error occurred. Try again later...", ephemeral=True)
+            else:
+                await interaction.response.send_message("Successfully removed from `Twitchio Tester`", ephemeral=True)
+
+            return
+
+        role = interaction.guild.get_role(TIO_TESTER)
+        assert role
+
+        try:
+            await member.add_roles(role)
+        except Exception:
+            await interaction.response.send_message("An unknown error occurred. Try again later...", ephemeral=True)
+        else:
+            await interaction.response.send_message("Successfully added to `Twitchio Tester`", ephemeral=True)
 
 
 async def setup(bot: core.Bot) -> None:
