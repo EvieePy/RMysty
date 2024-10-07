@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import asyncio
+import logging
 
 import discord
 
@@ -22,11 +23,18 @@ import database
 
 
 discord.utils.setup_logging(level=core.config["OPTIONS"]["logging"])
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
-async def main() -> None:
-    async with database.Database() as db, core.Bot(database=db) as bot:
-        await bot.start(core.config["TOKENS"]["discord"])
+def main() -> None:
+    async def runner() -> None:
+        async with database.Database() as db, core.Bot(database=db) as bot:
+            await bot.start(core.config["TOKENS"]["discord"])
+
+    try:
+        asyncio.run(runner())
+    except KeyboardInterrupt:
+        LOGGER.warning("Shutting down due to Keyboard Interrupt.")
 
 
-asyncio.run(main())
+main()
