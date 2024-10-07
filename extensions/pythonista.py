@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
+import re
 from collections import defaultdict
 from typing import cast
 
@@ -38,10 +39,20 @@ BYPASS_ROLES: tuple[int, ...] = (
     986107886470049892,
 )
 
+GENERAL_CHANNELS: tuple[int, ...] = (490950520412831746, 1292898281931935938, 916551676448636969)
 TIO_TESTER: int = 1286823927540219916
+HONEY_ROLE: int = 1292886539877093549
+BEE_CHANNEL: int = 1292898281931935938
 
 CHANNEL_SPREAD: int = 3
 CHANNEL_SPREAD_RATE: float = 5
+
+URL_REGEX: re.Pattern[str] = re.compile(
+    r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*", re.IGNORECASE
+)
+AI_REGEX: re.Pattern[str] = re.compile(r"\S+\.ai")
+
+URL_MAX: int = 3
 
 
 class Pythonista(commands.Cog):
@@ -58,22 +69,25 @@ class Pythonista(commands.Cog):
 
         return member in guild.members
 
+    async def _do_ban(self, member: discord.Member, *, reason: str = "No reason given...") -> None:
+        try:
+            await member.ban(delete_message_days=1, reason=f"AutoBan: {reason}")
+        except discord.HTTPException as e:
+            if not self._check_current_member(member):
+                return
+
+            webhook: discord.Webhook = discord.Webhook.from_url(core.config["PYTHONISTA"]["logs"], client=self.bot)
+            await webhook.send(
+                f"Unable to ban user for `{reason}`: `{member} (ID: {member.id})` > `{e}`",
+                username="RMysty AutoMod",
+            )
+
     async def _spread_waiter(self, member: discord.Member, *, rate: float = CHANNEL_SPREAD_RATE) -> None:
         await asyncio.sleep(rate)
 
         spread = self._channel_spread[member.id]
         if len(spread) >= CHANNEL_SPREAD:
-            try:
-                await member.ban(delete_message_days=1, reason="AutoBan: Spamming messages across channels.")
-            except discord.HTTPException as e:
-                if not self._check_current_member(member):
-                    return
-
-                webhook: discord.Webhook = discord.Webhook.from_url(core.config["PYTHONISTA"]["logs"], client=self.bot)
-                await webhook.send(
-                    f"Unable to ban user for Channel Spread Spam: `{member} (ID: {member.id})` > `{e}`",
-                    username="RMysty AutoMod",
-                )
+            await self._do_ban(member, reason="Spamming across channels")
 
         spread.clear()
 
@@ -83,6 +97,20 @@ class Pythonista(commands.Cog):
                 task.cancel()
             except Exception as e:
                 logger.debug("Failed to cancel running spread task: %s", e)
+
+    def is_new(self, member: discord.Member, hours: int = 24) -> bool:
+        joined: datetime.datetime | None = member.joined_at
+        if not joined:
+            return False
+
+        now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+        delta: datetime.timedelta = datetime.timedelta(hours=hours)
+
+        return joined + delta >= now
+
+    def url_count(self, content: str) -> int:
+        matches = URL_REGEX.findall(content)
+        return len(matches)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -99,12 +127,8 @@ class Pythonista(commands.Cog):
         if author.guild_permissions.kick_members:
             return
 
-        joined: datetime.datetime | None = author.joined_at
-        now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
-        delta: datetime.timedelta = datetime.timedelta(days=1)
-
         # Increase the time we wait for spread on new joins...
-        rate: float = 15.5 if joined and joined + delta >= now else CHANNEL_SPREAD_RATE
+        rate: float = 15.5 if self.is_new(author) else CHANNEL_SPREAD_RATE
 
         spread = self._channel_spread[author.id]
         if not spread:
@@ -113,6 +137,69 @@ class Pythonista(commands.Cog):
             self._tasks.add(task)
 
         spread.add(message.channel.id)
+
+    @commands.Cog.listener("on_message")
+    async def on_message_ot(self, message: discord.Message) -> None:
+        if message.author.bot:
+            return
+
+        if message.channel.id not in GENERAL_CHANNELS:
+            return
+
+        assert isinstance(message.author, discord.Member)
+        member: discord.Member = message.author
+
+        if any(r.id in BYPASS_ROLES for r in member.roles):
+            return
+
+        if member.guild_permissions.kick_members:
+            return
+
+        if not self.is_new(member):
+            return
+
+        if member.get_role(HONEY_ROLE) and message.channel.id == BEE_CHANNEL:
+            return await self._do_ban(member, reason="Honeypot Ban!")
+
+        content: str = message.content
+
+        if AI_REGEX.findall(content):
+            return await self._do_ban(member, reason="Suspected Advertising/Spam (New Member)")
+
+        urls: int = self.url_count(content)
+        if urls > URL_MAX and self.is_new(member, hours=1):
+            return await self._do_ban(member, reason="URL Spam (New Member)")
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
+        if after.bot:
+            return
+
+        if after.guild.id != PYTHONISTA:
+            return
+
+        if any(r.id in BYPASS_ROLES for r in after.roles):
+            return
+
+        if after.guild_permissions.kick_members:
+            return
+
+        if after.flags.did_rejoin:
+            return
+
+        if before.flags.completed_onboarding:
+            return
+
+        if not after.flags.completed_onboarding:
+            return
+
+        if not after.get_role(HONEY_ROLE):
+            return
+
+        webhook: discord.Webhook = discord.Webhook.from_url(core.config["PYTHONISTA"]["logs"], client=self.bot)
+        await webhook.send(
+            f"{after.mention} has selected <@&{HONEY_ROLE}> during onboarding.", username="RMysty AutoMod"
+        )
 
     @app_commands.command()
     @app_commands.guilds(discord.Object(PYTHONISTA))
