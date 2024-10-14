@@ -42,7 +42,7 @@ BYPASS_ROLES: tuple[int, ...] = (
 GENERAL_CHANNELS: tuple[int, ...] = (490950520412831746, 1292898281931935938, 916551676448636969)
 TIO_TESTER: int = 1286823927540219916
 HONEY_ROLE: int = 1292886539877093549
-BEE_CHANNEL: int = 1292898281931935938
+BEE_CHANNELS: tuple[int, ...] = (1292898281931935938, 490950520412831746, 1006716547223519293, 490951172673372195)
 
 CHANNEL_SPREAD: int = 3
 CHANNEL_SPREAD_RATE: float = 5
@@ -158,7 +158,7 @@ class Pythonista(commands.Cog):
         if not self.is_new(member):
             return
 
-        if member.get_role(HONEY_ROLE) and message.channel.id == BEE_CHANNEL:
+        if member.get_role(HONEY_ROLE) and message.channel.id in BEE_CHANNELS:
             return await self._do_ban(member, reason="Honeypot Ban!")
 
         content: str = message.content
