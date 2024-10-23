@@ -18,12 +18,30 @@ from typing import Any
 import asyncpg
 
 
-__all__ = ("ColourRecord",)
+__all__ = ("ColourRecord", "PasteRecord", "PasteBlockRecord")
 
 
 class ColourRecord(asyncpg.Record):
     name: str
     hex: str
+
+    def __getattr__(self, attr: str) -> Any:
+        return self[attr]
+
+
+class PasteRecord(asyncpg.Record):
+    id: str
+    uid: int
+    mid: int
+    vid: int
+    token: str
+
+    def __getattr__(self, attr: str) -> Any:
+        return self[attr]
+
+
+class PasteBlockRecord(asyncpg.Record):
+    mid: int
 
     def __getattr__(self, attr: str) -> Any:
         return self[attr]

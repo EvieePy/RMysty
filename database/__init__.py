@@ -111,3 +111,41 @@ class Database:
             rows: list[ColourRecord] = await connection.fetch(query, name, distance, record_class=ColourRecord)
 
         return rows
+
+    async def insert_user_paste(self, *, id: str, uid: int, mid: int, vid: int, token: str) -> None:
+        query: str = """INSERT INTO pastes(id, uid, mid, vid, token) VALUES($1, $2, $3, $4, $5)"""
+
+        async with self.pool.acquire() as connection:
+            await connection.execute(query, id, uid, mid, vid, token)
+
+    async def fetch_user_paste(self, *, id: str, uid: int) -> PasteRecord | None:
+        query: str = """SELECT * FROM pastes WHERE id = $1 AND uid = $2"""
+
+        async with self.pool.acquire() as connection:
+            row: PasteRecord | None = await connection.fetchrow(query, id, uid, record_class=PasteRecord)
+
+        return row
+
+    async def delete_user_paste(self, *, id: str, uid: int, mid: int) -> None:
+        query: str = """DELETE FROM pastes WHERE id = $1 AND uid = $2"""
+        second: str = """INSERT INTO paste_blocks(mid) VALUES($1) ON CONFLICT DO NOTHING"""
+
+        async with self.pool.acquire() as connection:
+            await connection.execute(query, id, uid)
+            await connection.execute(second, mid)
+
+    async def fetch_all_pastes(self) -> list[PasteRecord]:
+        query: str = """SELECT * FROM pastes"""
+
+        async with self.pool.acquire() as connection:
+            rows: list[PasteRecord] = await connection.fetch(query, record_class=PasteRecord)
+
+        return rows
+
+    async def fetch_all_blocks(self) -> list[PasteBlockRecord]:
+        query: str = """SELECT * FROM paste_blocks"""
+
+        async with self.pool.acquire() as connection:
+            rows: list[PasteBlockRecord] = await connection.fetch(query, record_class=PasteBlockRecord)
+
+        return rows

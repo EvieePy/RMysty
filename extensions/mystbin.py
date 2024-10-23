@@ -90,6 +90,13 @@ class MystBin(commands.Cog):
         assert self.session
         await interaction.response.defer()
 
+        if message.id in self.bot.blocked_pastes and message.author.id != interaction.user.id:
+            msg = f"{message.author.mention} has blocked this message from being added to MystBin."
+            await interaction.followup.send(
+                msg, allowed_mentions=discord.AllowedMentions.none(), silent=True, ephemeral=True
+            )
+            return
+
         # First check our cache...
         # This doesn't technically save a request, but it *does* save a POST request in most cases...
         cached: Node | None = self.cache.get(message.id, None)
@@ -135,11 +142,21 @@ class MystBin(commands.Cog):
             data: PasteCreateResp = await resp.json()
             identifier: str = data["id"]
             url: str = f"{MYSTBIN_URL}{identifier}"
+            token: str = data["safety"]
 
             node: Node = Node(identifier=identifier, last_edit=message.edited_at)
             self.cache[message.id] = node
+            view: core.MBPasteView = core.MBPasteView(self.bot, paste_id=identifier)
 
-            await interaction.followup.send(url)
+            msg = (
+                f"{message.author.mention} your message was shared on [MystBin]({url}).\n"
+                "You may delete this data at any time using the button below."
+            )
+
+            new = await interaction.followup.send(msg, view=view, wait=True)
+            await self.bot.database.insert_user_paste(
+                id=identifier, uid=message.author.id, mid=message.id, vid=new.id, token=token
+            )
 
     async def mystbin_error(
         self, interaction: discord.Interaction[core.Bot], error: app_commands.AppCommandError

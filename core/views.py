@@ -18,7 +18,7 @@ from __future__ import annotations
 import asyncio
 import io
 import math
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import discord
 import numpy as np
@@ -31,8 +31,10 @@ import core
 if TYPE_CHECKING:
     from types_.colours import COORDS_FT, RGB_T
 
+    from ..database.models import PasteRecord
 
-__all__ = ("PageModal", "ColourView")
+
+__all__ = ("PageModal", "ColourView", "MBPasteView", "ConfirmView")
 
 
 class PageModal(ui.Modal, title="Select Page"):
@@ -259,3 +261,84 @@ class ColourView(ui.View):
 
         self.embed.set_image(url=f"attachment://{self.colour.hex_clean}.png")
         self.embed.set_thumbnail(url=f"attachment://{self.colour.hex_clean}_thumb.png")
+
+
+class ConfirmView(ui.View):
+    def __init__(self, *, timeout: float | None = 90) -> None:
+        self.result: bool = False
+        super().__init__(timeout=timeout)
+
+    @ui.button(label="Delete", style=discord.ButtonStyle.red)
+    async def confirm(self, interaction: discord.Interaction[core.Bot], button: discord.ui.Button[Self]) -> None:
+        self.result = True
+
+        await interaction.response.defer()
+
+        try:
+            await interaction.delete_original_response()
+        except:
+            pass
+
+        self.stop()
+
+    @ui.button(label="Cancel", style=discord.ButtonStyle.blurple)
+    async def cancel(self, interaction: discord.Interaction[core.Bot], button: discord.ui.Button[Self]) -> None:
+        await interaction.response.defer()
+
+        try:
+            await interaction.delete_original_response()
+        except:
+            pass
+
+        self.stop()
+
+
+class MBPasteView(ui.View):
+    def __init__(self, bot: core.Bot, *, paste_id: str = "") -> None:
+        self.bot: core.Bot = bot
+        self.paste_id: str = paste_id
+
+        super().__init__(timeout=None)
+
+        url_button: ui.Button[Self] = ui.Button(label="View Paste", url=f"https://mystb.in/{paste_id}")
+        del_button: ui.Button[Self] = ui.Button(label="Delete", style=discord.ButtonStyle.red, custom_id=f"d_{paste_id}")
+        del_button.callback = self.del_callback
+
+        self.add_item(url_button)
+        self.add_item(del_button)
+
+    async def del_callback(self, interaction: discord.Interaction[core.Bot]) -> None:
+        await interaction.response.defer(ephemeral=True)
+        user: discord.User | discord.Member = interaction.user
+
+        paste: PasteRecord | None = await self.bot.database.fetch_user_paste(id=self.paste_id, uid=user.id)
+        if not paste:
+            await interaction.followup.send("Only the message author may delete this paste.", ephemeral=True)
+            return
+
+        confirm: ConfirmView = ConfirmView()
+        confmsg = (
+            "Are you sure you would like to remove this paste? **This action can not be undone.**\n\n"
+            "- No one will be able to send this message to MystBin in the future!\n"
+            "- If you are worried about tokens: MystBin automatically invalidates all tokens from `Discord`, `Github` and `PyPi`\n"
+            "- Someone may have been viewing this paste to assist you; make sure to let them know you removed your paste.\n\n"
+        )
+        await interaction.followup.send(confmsg, view=confirm, ephemeral=True)
+        await confirm.wait()
+
+        if not confirm.result:
+            return
+
+        url: str = f"https://mystb.in/api/security/delete/{paste.token}"
+        try:
+            async with self.bot.session.get(url) as resp:
+                resp.raise_for_status()
+        except Exception as e:
+            await interaction.followup.send(f"An unexpected error occurred, please try again: {e}", ephemeral=True)
+            return
+
+        self.bot.blocked_pastes.add(paste.mid)
+        await self.bot.database.delete_user_paste(id=self.paste_id, uid=user.id, mid=paste.mid)
+
+        await interaction.followup.send("Successfully removed this paste and data.", ephemeral=True)
+        await interaction.delete_original_response()
