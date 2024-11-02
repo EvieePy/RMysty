@@ -24,7 +24,7 @@ import core
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-DISABLED = ("media", "chii")
+DISABLED = ("extensions.media", "extensions.chii")
 
 
 async def setup(bot: core.Bot) -> None:
