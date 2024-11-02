@@ -62,8 +62,9 @@ class Bot(commands.Bot):
         uri: str = config["WAVELINK"]["uri"]
         password: str = config["WAVELINK"]["password"]
 
-        node: wavelink.Node = wavelink.Node(uri=uri, password=password)
-        await wavelink.Pool.connect(nodes=[node], cache_capacity=1000, client=self)
+        if not self.debug:
+            node: wavelink.Node = wavelink.Node(uri=uri, password=password)
+            await wavelink.Pool.connect(nodes=[node], cache_capacity=1000, client=self)
 
         self.colours = {c["hex"]: c["name"] for c in await self.database.fetch_colours()}
 
