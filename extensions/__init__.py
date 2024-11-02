@@ -24,11 +24,17 @@ import core
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+DISABLED = ("media", "chii")
+
+
 async def setup(bot: core.Bot) -> None:
     extensions: list[str] = [f".{f.stem}" for f in pathlib.Path("extensions").glob("*[a-zA-Z].py")]
     loaded: list[str] = []
 
     for extension in extensions:
+        if bot.debug and extension in DISABLED:
+            continue
+
         try:
             await bot.load_extension(extension, package="extensions")
         except Exception as e:

@@ -24,11 +24,12 @@ import database
 
 discord.utils.setup_logging(level=core.config["OPTIONS"]["logging"])
 LOGGER: logging.Logger = logging.getLogger(__name__)
+DEBUG = False
 
 
 def main() -> None:
     async def runner() -> None:
-        async with database.Database() as db, core.Bot(database=db) as bot:
+        async with database.Database() as db, core.Bot(database=db, debug=DEBUG) as bot:
             await bot.start(core.config["TOKENS"]["discord"])
 
     try:

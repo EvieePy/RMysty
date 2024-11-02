@@ -39,7 +39,8 @@ class Bot(commands.Bot):
     colours: dict[str, str]
     session: aiohttp.ClientSession
 
-    def __init__(self, *, database: Database) -> None:
+    def __init__(self, *, database: Database, debug: bool = False) -> None:
+        self.debug = debug
         self.database = database
         self.blocked_pastes: set[int] = set()
 
