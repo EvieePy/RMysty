@@ -159,7 +159,7 @@ class Pythonista(commands.Cog):
             return
 
         if member.get_role(HONEY_ROLE) and message.channel.id in BEE_CHANNELS:
-            return await self._do_ban(member, reason="Honeypot Ban!")
+            return await self._do_ban(member, reason="Honeypot")
 
         content: str = message.content
 
@@ -196,10 +196,7 @@ class Pythonista(commands.Cog):
         if not after.get_role(HONEY_ROLE):
             return
 
-        webhook: discord.Webhook = discord.Webhook.from_url(core.config["PYTHONISTA"]["logs"], client=self.bot)
-        await webhook.send(
-            f"{after.mention} has selected <@&{HONEY_ROLE}> during onboarding.", username="RMysty AutoMod"
-        )
+        await self._do_ban(after, reason="Honeypot")
 
     @app_commands.command()
     @app_commands.guilds(discord.Object(PYTHONISTA))
