@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from ..database.models import PasteRecord
 
 
-__all__ = ("PageModal", "ColourView", "MBPasteView", "ConfirmView")
+__all__ = ("PageModal", "ColourView", "MBPasteView", "ConfirmView", "CountdownView")
 
 
 class PageModal(ui.Modal, title="Select Page"):
@@ -293,6 +293,40 @@ class ConfirmView(ui.View):
         self.stop()
 
 
+class CountdownView(ui.View):
+    def __init__(self, *, timeout: float | None = 90, user_id: int) -> None:
+        self.result: bool = False
+        self.user_id: int = user_id
+        super().__init__(timeout=timeout)
+
+    async def interaction_check(self, interaction: discord.Interaction[discord.Client]) -> bool:
+        return interaction.user.id == self.user_id
+
+    @ui.button(label="Start", style=discord.ButtonStyle.green)
+    async def confirm(self, interaction: discord.Interaction[core.Bot], button: discord.ui.Button[Self]) -> None:
+        self.result = True
+
+        await interaction.response.defer()
+
+        for child in self.children:
+            if isinstance(child, discord.ui.Button):
+                child.disabled = True
+
+        await interaction.edit_original_response(view=self)
+        self.stop()
+
+    @ui.button(label="Cancel", style=discord.ButtonStyle.red)
+    async def cancel(self, interaction: discord.Interaction[core.Bot], button: discord.ui.Button[Self]) -> None:
+        await interaction.response.defer()
+
+        for child in self.children:
+            if isinstance(child, discord.ui.Button):
+                child.disabled = True
+
+        await interaction.edit_original_response(view=self)
+        self.stop()
+
+
 class MBPasteView(ui.View):
     def __init__(self, bot: core.Bot, *, paste_id: str = "") -> None:
         self.bot: core.Bot = bot
@@ -301,7 +335,9 @@ class MBPasteView(ui.View):
         super().__init__(timeout=None)
 
         url_button: ui.Button[Self] = ui.Button(label="View Paste", url=f"https://mystb.in/{paste_id}")
-        del_button: ui.Button[Self] = ui.Button(label="Delete", style=discord.ButtonStyle.red, custom_id=f"d_{paste_id}")
+        del_button: ui.Button[Self] = ui.Button(
+            label="Delete", style=discord.ButtonStyle.red, custom_id=f"d_{paste_id}"
+        )
         del_button.callback = self.del_callback
 
         self.add_item(url_button)
