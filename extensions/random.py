@@ -43,14 +43,14 @@ class Random(commands.Cog):
             await interaction.followup.send("Cancelling countdown!")
             return
 
-        msg_: discord.WebhookMessage = await interaction.followup.send("**3**")  # type: ignore
+        msg_: discord.WebhookMessage = await interaction.followup.send("\u0033\ufe0f\u20e3")  # type: ignore
         await asyncio.sleep(1)
 
         for i in range(2, 0, -1):
-            await msg_.edit(content=f"**{i}**")
+            await msg_.edit(content=f"{i}\ufe0f\u20e3")
             await asyncio.sleep(1)
 
-        await msg_.edit(content="**Go!**")
+        await msg_.edit(content="\ud83c\uddec \ud83c\uddf4")
 
 
 async def setup(bot: core.Bot) -> None:
