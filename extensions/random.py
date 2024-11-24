@@ -37,17 +37,20 @@ class Random(commands.Cog):
 
         view = core.CountdownView(user_id=interaction.user.id)
         await interaction.response.send_message(msg, view=view)
-
         await view.wait()
+
         if view.result is False:
             await interaction.followup.send("Cancelling countdown!")
             return
 
-        for i in range(3, 0, -1):
-            await interaction.followup.send(str(i))
+        msg_: discord.WebhookMessage = await interaction.followup.send("### 3")  # type: ignore
+        await asyncio.sleep(1)
+
+        for i in range(2, 0, -1):
+            await msg_.edit(content=f"### {i}")
             await asyncio.sleep(1)
 
-        await interaction.followup.send("Go!")
+        await msg_.edit(content="## Go!")
 
 
 async def setup(bot: core.Bot) -> None:
