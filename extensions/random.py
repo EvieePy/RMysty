@@ -50,7 +50,7 @@ class Random(commands.Cog):
             await msg_.edit(content=f"{i}\ufe0f\u20e3")
             await asyncio.sleep(1)
 
-        await msg_.edit(content="\ud83c\uddec \ud83c\uddf4")
+        await msg_.edit(content="\ud83c\uddec \ud83c\uddf4 \u2757")
 
 
 async def setup(bot: core.Bot) -> None:
