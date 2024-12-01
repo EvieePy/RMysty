@@ -33,10 +33,16 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 PYTHONISTA: int = 490948346773635102
+TIME: int = 859565527343955998
+
 BYPASS_ROLES: tuple[int, ...] = (
     570452583932493825,
     1064477988013477939,
     986107886470049892,
+    1099565946403836015,
+    1160372911853555814,
+    873944105598738462,
+    862802293891530812,
 )
 
 GENERAL_CHANNELS: tuple[int, ...] = (490950520412831746, 1292898281931935938, 916551676448636969)
@@ -117,7 +123,7 @@ class Pythonista(commands.Cog):
         if message.author.bot:
             return
 
-        if not message.guild or message.guild.id != PYTHONISTA:
+        if not message.guild or message.guild.id not in (PYTHONISTA, TIME):
             return
 
         author: discord.Member = cast(discord.Member, message.author)
