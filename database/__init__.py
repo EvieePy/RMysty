@@ -149,3 +149,21 @@ class Database:
             rows: list[PasteBlockRecord] = await connection.fetch(query, record_class=PasteBlockRecord)
 
         return rows
+
+    async def fetch_user_timezone(self, *, uid: int) -> TimezoneRecord | None:
+        query: str = """SELECT * FROM timezones WHERE uid = $1"""
+
+        async with self.pool.acquire() as connection:
+            row: TimezoneRecord | None = await connection.fetchrow(query, uid, record_class=TimezoneRecord)
+
+        return row
+
+    async def set_user_timezone(self, *, uid: int, timezone: str) -> None:
+        query: str = """
+        INSERT INTO timezones(uid, timezone) VALUES($1, $2)
+        ON CONFLICT (uid) DO UPDATE
+        SET timezone = $2
+        """
+
+        async with self.pool.acquire() as connection:
+            await connection.execute(query, uid, timezone)

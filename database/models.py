@@ -18,7 +18,7 @@ from typing import Any
 import asyncpg
 
 
-__all__ = ("ColourRecord", "PasteRecord", "PasteBlockRecord")
+__all__ = ("ColourRecord", "PasteRecord", "PasteBlockRecord", "TimezoneRecord")
 
 
 class ColourRecord(asyncpg.Record):
@@ -42,6 +42,14 @@ class PasteRecord(asyncpg.Record):
 
 class PasteBlockRecord(asyncpg.Record):
     mid: int
+
+    def __getattr__(self, attr: str) -> Any:
+        return self[attr]
+
+
+class TimezoneRecord(asyncpg.Record):
+    uid: int
+    timezone: str
 
     def __getattr__(self, attr: str) -> Any:
         return self[attr]

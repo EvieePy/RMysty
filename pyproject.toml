@@ -57,7 +57,7 @@ ignore = [
 
 [tool.ruff]
 line-length = 120
-exclude = ["venv", "core/logger.py"]
+exclude = ["venv", "core/logger.py", "core/fuzzy.py"]
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true

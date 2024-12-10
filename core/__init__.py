@@ -17,6 +17,7 @@ from . import constants as constants
 from .bot import Bot as Bot
 from .config import config as config
 from .enums import *
+from .fuzzy import extract_or_exact as extract_or_exact
 from .lru import LRUCache as LRUCache
 from .translator import Translator as Translator
 from .utils import CodeBlocks as CodeBlocks, Colour as Colour

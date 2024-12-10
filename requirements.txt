@@ -7,3 +7,4 @@ jishaku
 Pillow
 types-Pillow
 numpy
+pytz

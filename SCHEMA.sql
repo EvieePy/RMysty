@@ -17,6 +17,11 @@ CREATE TABLE IF NOT EXISTS pastes (
         CONSTRAINT pk_id_uid PRIMARY KEY (id, uid)
 );
 
+CREATE TABLE IF NOT EXISTS timezones (
+    uid BIGINT PRIMARY KEY,
+    timezone TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS paste_blocks (
     mid BIGINT PRIMARY KEY
-)
+);
