@@ -97,7 +97,12 @@ class Time(commands.Cog):
 
         result = await self.bot.database.fetch_user_timezone(uid=resolved.id)
         if not result:
-            await interaction.followup.send(f"`{resolved}` has no timezone set.")
+            embed = discord.Embed(
+                title="Timezone Information",
+                description=f"`{resolved.mention}` has no timezone set.",
+                color=0x04A0B7,
+            )
+            await interaction.followup.send(embed=embed)
             return
 
         tz = pytz.timezone(result.timezone)
