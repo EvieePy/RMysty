@@ -99,7 +99,7 @@ class Time(commands.Cog):
         if not result:
             embed = discord.Embed(
                 title="Timezone Information",
-                description=f"`{resolved.mention}` has no timezone set.",
+                description=f"{resolved.mention} has no timezone set.",
                 color=0x04A0B7,
             )
             await interaction.followup.send(embed=embed)
