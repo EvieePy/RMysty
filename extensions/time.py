@@ -44,12 +44,12 @@ class Time(commands.Cog):
     def build_embed(self, user: discord.User, dt: datetime.datetime) -> discord.Embed:
         colour = 1513835 if dt.hour <= 6 or dt.hour >= 18 else 15460239
 
-        embed = discord.Embed(title="Timezone Infomation", description=f"{dt}", colour=colour)
+        embed = discord.Embed(title="Timezone Information", description=f"{dt}", colour=colour)
         embed.set_author(name=user.name, icon_url=user.display_avatar.url)
 
         offset = datetime.datetime.utcoffset(dt) or datetime.timedelta(hours=0)
         long = dt.strftime("%A, %d %B %Y, %H:%M:%S")
-        short = dt.strftime("%H:%M %p")
+        short = dt.strftime("%I:%M %p")
 
         embed.description = (
             f"### `{dt.tzname()} | {'+' if offset.seconds > -1 else '-'}{offset} UTC`\n`{long}`\n`({short})`"
