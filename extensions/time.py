@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import datetime
+from typing import TYPE_CHECKING, cast
 
 import discord
 import pytz
@@ -21,6 +22,10 @@ from discord import app_commands
 from discord.ext import commands
 
 import core
+
+
+if TYPE_CHECKING:
+    from database.models import TimezoneRecord
 
 
 class Time(commands.Cog):
@@ -44,7 +49,7 @@ class Time(commands.Cog):
     def build_embed(self, user: discord.User, dt: datetime.datetime) -> discord.Embed:
         colour = 1513835 if dt.hour <= 6 or dt.hour >= 18 else 15460239
 
-        embed = discord.Embed(title="Timezone Information", description=f"{dt}", colour=colour)
+        embed = discord.Embed(title="Timezone Information", colour=colour)
         embed.set_author(name=user.name, icon_url=user.display_avatar.url)
 
         offset = datetime.datetime.utcoffset(dt) or datetime.timedelta(hours=0)
@@ -54,6 +59,30 @@ class Time(commands.Cog):
         embed.description = (
             f"### `{dt.tzname()} | {'+' if offset.seconds > -1 else '-'}{offset} UTC`\n`{long}`\n`({short})`"
         )
+
+        return embed
+
+    def build_dual_embed(
+        self, *, one: discord.User, two: discord.User, dtone: datetime.datetime, dttwo: datetime.datetime
+    ) -> discord.Embed:
+        colour = 1513835 if dtone.hour <= 6 or dtone.hour >= 18 else 15460239
+
+        embed = discord.Embed(title="Timezone Information", colour=colour)
+        embed.set_author(name=one.name, icon_url=one.display_avatar.url)
+
+        offset = datetime.datetime.utcoffset(dtone) or datetime.timedelta(hours=0)
+        long = dtone.strftime("%A, %d %B %Y, %H:%M:%S")
+        short = dtone.strftime("%I:%M %p")
+
+        embed.description = (
+            f"### `{dtone.tzname()} | {'+' if offset.seconds > -1 else '-'}{offset} UTC`\n`{long}`\n`({short})`"
+        )
+
+        offsett = datetime.datetime.utcoffset(dttwo) or datetime.timedelta(hours=0)
+        longt = dttwo.strftime("%A, %d %B %Y, %H:%M:%S")
+        shortt = dttwo.strftime("%I:%M %p")
+
+        embed.description += f"### {two.mention}\n### `{dttwo.tzname()} | {'+' if offsett.seconds > -1 else '-'}{offsett} UTC`\n`{longt}`\n`({shortt})`"
 
         return embed
 
@@ -105,11 +134,33 @@ class Time(commands.Cog):
             await interaction.followup.send(embed=embed)
             return
 
+        second: discord.User | None = None
+        secondt: datetime.datetime | None = None
+
+        if isinstance(interaction.channel, discord.DMChannel) and interaction.channel.recipient:
+            resultt: TimezoneRecord | None = None
+
+            if resolved == interaction.user:
+                second = interaction.channel.recipient
+                resultt = await self.bot.database.fetch_user_timezone(uid=interaction.channel.recipient.id)
+            else:
+                second = cast(discord.User, interaction.user)
+                resultt = await self.bot.database.fetch_user_timezone(uid=interaction.user.id)
+
+            if resultt:
+                tz = pytz.timezone(resultt.timezone)
+                utc = datetime.datetime.now(tz=datetime.UTC)
+                secondt = utc.astimezone(tz=tz)
+
         tz = pytz.timezone(result.timezone)
         utc = datetime.datetime.now(tz=datetime.UTC)
         local_ = utc.astimezone(tz=tz)
 
-        embed = self.build_embed(resolved, local_)
+        if second and secondt:
+            embed = self.build_dual_embed(one=resolved, two=second, dtone=local_, dttwo=secondt)
+        else:
+            embed = self.build_embed(resolved, local_)
+
         await interaction.followup.send(embed=embed)
 
     @time_set.autocomplete(name="timezone")
