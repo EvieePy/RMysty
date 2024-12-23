@@ -82,7 +82,7 @@ class Time(commands.Cog):
         longt = dttwo.strftime("%A, %d %B %Y, %H:%M:%S")
         shortt = dttwo.strftime("%I:%M %p")
 
-        embed.description += f"### {two.mention}\n### `{dttwo.tzname()} | {'+' if offsett.seconds > -1 else '-'}{offsett} UTC`\n`{longt}`\n`({shortt})`"
+        embed.description += f"\n\n### {two.mention} Comparison\n### `{dttwo.tzname()} | {'+' if offsett.seconds > -1 else '-'}{offsett} UTC`\n`{longt}`\n`({shortt})`"
 
         return embed
 
