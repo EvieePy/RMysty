@@ -116,7 +116,8 @@ class MystBin(commands.Cog):
         content: str
 
         for attachment in message.attachments:
-            content_type: str = attachment.content_type or ""
+            content_type: str = attachment.content_type or "text/"
+            
             if content_type.startswith("text/") or content_type == "application/json":
                 content = (await attachment.read()).decode("UTF-8")
                 filename: str = attachment.filename.removesuffix(".txt")
