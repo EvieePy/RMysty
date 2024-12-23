@@ -137,15 +137,11 @@ class Time(commands.Cog):
         second: discord.User | None = None
         secondt: datetime.datetime | None = None
 
-        if isinstance(interaction.channel, discord.DMChannel) and interaction.channel.recipient:
+        if user and resolved.id != user.id:
             resultt: TimezoneRecord | None = None
 
-            if resolved == interaction.user:
-                second = interaction.channel.recipient
-                resultt = await self.bot.database.fetch_user_timezone(uid=interaction.channel.recipient.id)
-            else:
-                second = cast(discord.User, interaction.user)
-                resultt = await self.bot.database.fetch_user_timezone(uid=interaction.user.id)
+            second = user
+            resultt = await self.bot.database.fetch_user_timezone(uid=user.id)
 
             if resultt:
                 tz = pytz.timezone(resultt.timezone)
