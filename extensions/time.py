@@ -140,7 +140,7 @@ class Time(commands.Cog):
         if resolved.id != interaction.user.id:
             resultt: TimezoneRecord | None = None
 
-            second = interaction.user
+            second = cast(discord.User, interaction.user)
             resultt = await self.bot.database.fetch_user_timezone(uid=interaction.user.id)
 
             if resultt:
