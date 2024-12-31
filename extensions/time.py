@@ -58,7 +58,7 @@ class Time(commands.Cog):
 
         days, hours, minutes = offset.days, offset.seconds // 3600, offset.seconds // 60 % 60
         real = hours if days == 0 else 24 - hours if days < 0 else 24 + hours
-        offstr = f"{'+' if offset.seconds > -1 else '-'}{real}:{minutes}"
+        offstr = f"{'+' if offset.total_seconds() > -1 else '-'}{real}:{minutes}"
 
         embed.description = f"### `{dt.tzname()} | {offstr} UTC`\n`{long}`\n`({short})`"
 
@@ -78,7 +78,7 @@ class Time(commands.Cog):
 
         days, hours, minutes = offset.days, offset.seconds // 3600, offset.seconds // 60 % 60
         real = hours if days == 0 else 24 - hours if days < 0 else 24 + hours
-        offstr = f"{'+' if offset.seconds > -1 else '-'}{real:02d}:{minutes:02d}"
+        offstr = f"{'+' if offset.total_seconds() > -1 else '-'}{real:02d}:{minutes:02d}"
 
         embed.description = f"### `{dtone.tzname()} | {offstr} UTC`\n`{long}`\n`({short})`"
 
@@ -88,7 +88,7 @@ class Time(commands.Cog):
 
         dayst, hourst, minutest = offsett.days, offsett.seconds // 3600, offsett.seconds // 60 % 60
         realt = hourst if dayst == 0 else 24 - hourst if dayst < 0 else 24 + hourst
-        offstrt = f"{'+' if offsett.seconds > -1 else '-'}{realt:02d}:{minutest:02d}"
+        offstrt = f"{'+' if offsett.total_seconds() > -1 else '-'}{realt:02d}:{minutest:02d}"
 
         embed.description += (
             f"\n\n### {two.mention} Comparison\n### `{dttwo.tzname()} | {offstrt} UTC`\n`{longt}`\n`({shortt})`"
