@@ -56,9 +56,11 @@ class Time(commands.Cog):
         long = dt.strftime("%A, %d %B %Y, %H:%M:%S")
         short = dt.strftime("%I:%M %p")
 
-        embed.description = (
-            f"### `{dt.tzname()} | {'+' if offset.seconds > -1 else '-'}{offset} UTC`\n`{long}`\n`({short})`"
-        )
+        days, hours, minutes = offset.days, offset.seconds // 3600, offset.seconds // 60 % 60
+        real = hours if days == 0 else 24 - hours if days < 0 else 24 + hours
+        offstr = f"{'+' if offset.seconds > -1 else '-'}{real}:{minutes}"
+
+        embed.description = f"### `{dt.tzname()} | {offstr} UTC`\n`{long}`\n`({short})`"
 
         return embed
 
@@ -74,15 +76,23 @@ class Time(commands.Cog):
         long = dtone.strftime("%A, %d %B %Y, %H:%M:%S")
         short = dtone.strftime("%I:%M %p")
 
-        embed.description = (
-            f"### `{dtone.tzname()} | {'+' if offset.seconds > -1 else '-'}{offset} UTC`\n`{long}`\n`({short})`"
-        )
+        days, hours, minutes = offset.days, offset.seconds // 3600, offset.seconds // 60 % 60
+        real = hours if days == 0 else 24 - hours if days < 0 else 24 + hours
+        offstr = f"{'+' if offset.seconds > -1 else '-'}{real}:{minutes}"
+
+        embed.description = f"### `{dtone.tzname()} | {offstr} UTC`\n`{long}`\n`({short})`"
 
         offsett = datetime.datetime.utcoffset(dttwo) or datetime.timedelta(hours=0)
         longt = dttwo.strftime("%A, %d %B %Y, %H:%M:%S")
         shortt = dttwo.strftime("%I:%M %p")
 
-        embed.description += f"\n\n### {two.mention} Comparison\n### `{dttwo.tzname()} | {'+' if offsett.seconds > -1 else '-'}{offsett} UTC`\n`{longt}`\n`({shortt})`"
+        days, hours, minutes = offset.days, offsett.seconds // 3600, offsett.seconds // 60 % 60
+        real = hours if days == 0 else 24 - hours if days < 0 else 24 + hours
+        offstr = f"{'+' if offsett.seconds > -1 else '-'}{real}:{minutes}"
+
+        embed.description += (
+            f"\n\n### {two.mention} Comparison\n### `{dttwo.tzname()} | {offstr} UTC`\n`{longt}`\n`({shortt})`"
+        )
 
         return embed
 
