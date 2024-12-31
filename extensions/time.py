@@ -78,7 +78,7 @@ class Time(commands.Cog):
 
         days, hours, minutes = offset.days, offset.seconds // 3600, offset.seconds // 60 % 60
         real = hours if days == 0 else 24 - hours if days < 0 else 24 + hours
-        offstr = f"{'+' if offset.seconds > -1 else '-'}{real}:{minutes}"
+        offstr = f"{'+' if offset.seconds > -1 else '-'}{real:02d}:{minutes:02d}"
 
         embed.description = f"### `{dtone.tzname()} | {offstr} UTC`\n`{long}`\n`({short})`"
 
@@ -86,12 +86,12 @@ class Time(commands.Cog):
         longt = dttwo.strftime("%A, %d %B %Y, %H:%M:%S")
         shortt = dttwo.strftime("%I:%M %p")
 
-        days, hours, minutes = offset.days, offsett.seconds // 3600, offsett.seconds // 60 % 60
-        real = hours if days == 0 else 24 - hours if days < 0 else 24 + hours
-        offstr = f"{'+' if offsett.seconds > -1 else '-'}{real}:{minutes}"
+        dayst, hourst, minutest = offsett.days, offsett.seconds // 3600, offsett.seconds // 60 % 60
+        realt = hourst if dayst == 0 else 24 - hourst if dayst < 0 else 24 + hourst
+        offstrt = f"{'+' if offsett.seconds > -1 else '-'}{realt:02d}:{minutest:02d}"
 
         embed.description += (
-            f"\n\n### {two.mention} Comparison\n### `{dttwo.tzname()} | {offstr} UTC`\n`{longt}`\n`({shortt})`"
+            f"\n\n### {two.mention} Comparison\n### `{dttwo.tzname()} | {offstrt} UTC`\n`{longt}`\n`({shortt})`"
         )
 
         return embed
