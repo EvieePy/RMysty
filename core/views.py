@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from ..database.models import PasteRecord
 
 
-__all__ = ("PageModal", "ColourView", "MBPasteView", "ConfirmView", "CountdownView")
+__all__ = ("ColourView", "ConfirmView", "CountdownView", "MBPasteView", "PageModal")
 
 
 class PageModal(ui.Modal, title="Select Page"):

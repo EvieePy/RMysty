@@ -18,7 +18,7 @@ from typing import Any
 import asyncpg
 
 
-__all__ = ("ColourRecord", "PasteRecord", "PasteBlockRecord", "TimezoneRecord")
+__all__ = ("ColourRecord", "PasteBlockRecord", "PasteRecord", "TimezoneRecord")
 
 
 class ColourRecord(asyncpg.Record):

@@ -14,18 +14,18 @@ limitations under the License.
 """
 
 __all__ = (
-    "PLAY_EMOJI",
-    "PAUSE_EMOJI",
-    "STOP_EMOJI",
-    "NEXT_EMOJI",
-    "PLAYER_EMOJI",
+    "BACK_EMOJI",
     "DJ_EMOJI",
     "EQUALIZER_EMOJI",
     "LIST_EMOJI",
-    "BACK_EMOJI",
-    "REPLAY_EMOJI",
-    "PLUS_EMOJI",
     "MINUS_EMOJI",
+    "NEXT_EMOJI",
+    "PAUSE_EMOJI",
+    "PLAYER_EMOJI",
+    "PLAY_EMOJI",
+    "PLUS_EMOJI",
+    "REPLAY_EMOJI",
+    "STOP_EMOJI",
     "TICK_EMOJI",
 )
 

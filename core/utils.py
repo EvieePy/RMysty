@@ -78,11 +78,11 @@ class Colour:
         "_code",
         "_hex",
         "_hex_clean",
+        "_hls",
+        "_hls_coords",
         "_html",
         "_rgb",
-        "_hls",
         "_rgb_coords",
-        "_hls_coords",
     )
 
     def __init__(self, data: Colours) -> None:
