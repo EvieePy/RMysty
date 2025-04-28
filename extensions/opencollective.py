@@ -130,6 +130,7 @@ class OpenCollective(commands.Cog):
 
     async def cog_load(self) -> None:
         self.update_contributor_metadata.start()
+        self.logs = await self.bot.fetch_channel(1262457734746472508)  # type: ignore
 
     async def cog_unload(self) -> None:
         self.update_contributor_metadata.stop()
@@ -294,11 +295,11 @@ class OpenCollective(commands.Cog):
         for name, value in fields.items():
             e.add_field(name=name, value=value, inline=True)
 
-        # try:
-        #     await self.bot.stats_webhook.send(embed=e)
-        # except Exception:
-        #     # If anything happened here, just discard is completely.
-        #     pass
+        try:
+            await self.logs.send(embed=e)  # type: ignore
+        except Exception:
+            # If anything happened here, just discard is completely.
+            pass
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
