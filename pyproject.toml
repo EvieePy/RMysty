@@ -54,7 +54,7 @@ ignore = [
 ]
 
 [tool.ruff]
-line-length = 120
+line-length = 125
 exclude = ["venv", "core/logger.py", "core/fuzzy.py"]
 
 [tool.ruff.lint.isort]
