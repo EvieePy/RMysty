@@ -335,9 +335,7 @@ class MBPasteView(ui.View):
         super().__init__(timeout=None)
 
         url_button: ui.Button[Self] = ui.Button(label="View Paste", url=f"https://mystb.in/{paste_id}")
-        del_button: ui.Button[Self] = ui.Button(
-            label="Delete", style=discord.ButtonStyle.red, custom_id=f"d_{paste_id}"
-        )
+        del_button: ui.Button[Self] = ui.Button(label="Delete", style=discord.ButtonStyle.red, custom_id=f"d_{paste_id}")
         del_button.callback = self.del_callback
 
         self.add_item(url_button)

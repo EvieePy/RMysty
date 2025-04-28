@@ -31,9 +31,7 @@ class Random(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def countdown(self, interaction: discord.Interaction) -> None:
         """Start a countdown of 3 seconds."""
-        msg = (
-            "Press start when you are ready to countdown from `3`.\nThis view will only be available for `90 seconds`."
-        )
+        msg = "Press start when you are ready to countdown from `3`.\nThis view will only be available for `90 seconds`."
 
         view = core.CountdownView(user_id=interaction.user.id)
         await interaction.response.send_message(msg, view=view)

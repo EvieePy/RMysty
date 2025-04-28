@@ -159,9 +159,7 @@ class MystBin(commands.Cog):
                 id=identifier, uid=message.author.id, mid=message.id, vid=new.id, token=token
             )
 
-    async def mystbin_error(
-        self, interaction: discord.Interaction[core.Bot], error: app_commands.AppCommandError
-    ) -> None:
+    async def mystbin_error(self, interaction: discord.Interaction[core.Bot], error: app_commands.AppCommandError) -> None:
         send = interaction.response.send_message
         if interaction.response.is_done():
             send = interaction.followup.send

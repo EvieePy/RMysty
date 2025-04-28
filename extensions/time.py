@@ -170,9 +170,7 @@ class Time(commands.Cog):
         await interaction.followup.send(embed=embed)
 
     @time_set.autocomplete(name="timezone")
-    async def time_set_autocomplete(
-        self, interation: discord.Interaction, current: str
-    ) -> list[app_commands.Choice[str]]:
+    async def time_set_autocomplete(self, interation: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         matches = core.extract_or_exact(current, pytz.all_timezones, limit=20, score_cutoff=50)
         results = [app_commands.Choice(name=m[0], value=m[0]) for m in matches]
 
