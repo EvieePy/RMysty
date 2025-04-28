@@ -18,3 +18,8 @@ web = "https://chii.to"
 
 [PYTHONISTA]
 logs = "..."  # webhooks for logs to Pythonista.
+
+[OPENCOLLECTIVE]
+personal_token = 
+discord_client_id = 
+discord_client_secret = 

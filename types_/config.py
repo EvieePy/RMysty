@@ -43,6 +43,12 @@ class Pythonista(TypedDict):
     logs: str
 
 
+class OpenCollective(TypedDict):
+    discord_client_id: str
+    discord_client_secret: str
+    personal_token: str
+
+
 class Config(TypedDict):
     TOKENS: Tokens
     DATABASE: Database
@@ -50,3 +56,4 @@ class Config(TypedDict):
     WAVELINK: Wavelink
     CHII: Chii
     PYTHONISTA: Pythonista
+    OPENCOLLECTIVE: OpenCollective

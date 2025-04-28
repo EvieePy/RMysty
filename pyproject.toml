@@ -55,7 +55,7 @@ ignore = [
 
 [tool.ruff]
 line-length = 125
-exclude = ["venv", "core/logger.py", "core/fuzzy.py"]
+exclude = ["venv", "core/logger.py", "core/fuzzy.py", "extensions/opencollective.py"]
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true
@@ -75,7 +75,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.pyright]
-exclude = ["venv"]
+exclude = ["venv", "extensions/opencollective.py"]
 useLibraryCodeForTypes = true
 typeCheckingMode = "strict"
 reportImportCycles = false
