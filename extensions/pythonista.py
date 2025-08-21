@@ -34,6 +34,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 PYTHONISTA: int = 490948346773635102
 TIME: int = 859565527343955998
+BUNNIE: int = 719993112596054028
 
 BYPASS_ROLES: tuple[int, ...] = (
     570452583932493825,
@@ -78,6 +79,12 @@ class Pythonista(commands.Cog):
     async def _do_ban(self, member: discord.Member, *, reason: str = "No reason given...") -> None:
         try:
             await member.ban(delete_message_days=1, reason=f"AutoBan: {reason}")
+            if member.guild.id == BUNNIE:
+                channel: discord.TextChannel = member.guild.get_channel(725130035069059198)  # type: ignore
+                if not channel:
+                    return
+
+                await channel.send(f"{member.mention}`(ID: {member.id})[{member.global_name}] was banned for: `{reason}`.")
         except discord.HTTPException as e:
             if not self._check_current_member(member):
                 return
@@ -118,12 +125,27 @@ class Pythonista(commands.Cog):
         matches = URL_REGEX.findall(content)
         return len(matches)
 
+    @commands.Cog.listener("on_message")
+    async def on_message_bunnie(self, message: discord.Message) -> None:
+        if message.author.bot:
+            return
+
+        if not message.guild or message.guild.id != BUNNIE:
+            return
+
+        author: discord.Member = cast(discord.Member, message.author)
+        if author.guild_permissions.kick_members:
+            return
+
+        if "nigger" in message.content or "nigga" in message.content:
+            await self._do_ban(author, reason="Racist Slurs")
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
 
-        if not message.guild or message.guild.id not in (PYTHONISTA, TIME):
+        if not message.guild or message.guild.id not in (PYTHONISTA, TIME, BUNNIE):
             return
 
         author: discord.Member = cast(discord.Member, message.author)
