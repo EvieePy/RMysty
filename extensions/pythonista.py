@@ -84,7 +84,7 @@ class Pythonista(commands.Cog):
                 if not channel:
                     return
 
-                await channel.send(f"{member.mention}`(ID: {member.id})[{member.global_name}]` was banned for: `{reason}`.")
+                await channel.send(f"{member.mention}`(ID: {member.id})[{member.name}]` was banned for: `{reason}`.")
         except discord.HTTPException as e:
             if not self._check_current_member(member):
                 return
