@@ -256,6 +256,46 @@ class Pythonista(commands.Cog):
         else:
             await interaction.response.send_message("Successfully added to `Twitchio Tester`", ephemeral=True)
 
+    @commands.command(aliases=["nban"])
+    @commands.has_permissions(ban_members=True)
+    async def netban(self, ctx: commands.Context[core.Bot], user: discord.User | int, *, reason: str | None = None) -> None:
+        to_ban: discord.User | discord.Object = user if isinstance(user, discord.User) else discord.Object(id=user)
+        guilds: list[discord.Guild] = []
+        errors: list[discord.Guild] = []
+        success: list[discord.Guild] = []
+
+        for guild in ctx.author.mutual_guilds:
+            mod = guild.get_member(ctx.author.id)
+            if not mod:
+                continue
+
+            bot_perms = guild.me.guild_permissions
+            mod_perms = mod.guild_permissions
+
+            if not mod_perms.administrator and not mod_perms.ban_members:
+                continue
+
+            if not bot_perms.administrator and not bot_perms.ban_members:
+                continue
+
+            guilds.append(guild)
+
+        message = f"NetBan Mod({ctx.author}): {reason or 'No reason provided.'}"
+
+        for guild in guilds:
+            try:
+                await guild.ban(to_ban, reason=message, delete_message_days=7)
+            except discord.HTTPException as e:
+                logger.warning("Unable to NetBan %s from %s(%d): %s", str(to_ban), str(guild), guild.id, e)
+                errors.append(guild)
+            else:
+                success.append(guild)
+
+            await asyncio.sleep(1)
+
+        error = f"\n\nUnable to ban from the following guilds: `{', '.join(g.name for g in errors)}`" if errors else ""
+        await ctx.send(f"Banned {to_ban} from {len(success)} guilds!{error}.")
+
 
 async def setup(bot: core.Bot) -> None:
     await bot.add_cog(Pythonista(bot))
