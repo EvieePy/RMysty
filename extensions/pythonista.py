@@ -301,7 +301,7 @@ class Pythonista(commands.Cog):
         guild_msg = ", ".join(f"`{g.name}({g.id})`" for g in success)
         user_msg = f"`@{to_ban} ({to_ban.id})`"
 
-        await ctx.send(f"Banned {user_msg} from `{guild_msg}` guilds!{error}")
+        await ctx.send(f"Banned {user_msg} from {guild_msg}.{error}")
 
 
 async def setup(bot: core.Bot) -> None:
