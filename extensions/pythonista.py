@@ -285,6 +285,9 @@ class Pythonista(commands.Cog):
         for guild in guilds:
             try:
                 await guild.ban(to_ban, reason=message, delete_message_days=7)
+            except discord.NotFound:
+                await ctx.send(f"Unsuccessful Ban: The user provided `{to_ban}` could not be found.")
+                return
             except discord.HTTPException as e:
                 logger.warning("Unable to NetBan %s from %s(%d): %s", str(to_ban), str(guild), guild.id, e)
                 errors.append(guild)
@@ -294,7 +297,11 @@ class Pythonista(commands.Cog):
             await asyncio.sleep(1)
 
         error = f"\n\nUnable to ban from the following guilds: `{', '.join(g.name for g in errors)}`" if errors else ""
-        await ctx.send(f"Banned {to_ban} from {len(success)} guilds!{error}.")
+
+        guild_msg = ", ".join(f"`{g.name}({g.id})`" for g in success)
+        user_msg = f"`@{to_ban} ({to_ban.id})`"
+
+        await ctx.send(f"Banned {user_msg} from `{guild_msg}` guilds!{error}")
 
 
 async def setup(bot: core.Bot) -> None:
